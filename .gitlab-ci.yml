@@ -36,4 +36,5 @@ upload-release: # задача с именем upload-release
     - > # сохранение артефакта в package registry
       curl -sSL -H "JOB-TOKEN: ${CI_JOB_TOKEN}" 
       -T sausage-store-0.0.1.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sausage-store/${CI_COMMIT_SHA}/"
-
+    - > # уведомление в slack о выполнении пайплайна
+      curl -X POST -H "Content-type: application/json" --data "{\"text\":\"$CI_COMMIT_BRANCH of $CI_PROJECT_TITLE from $GITLAB_USER_LOGIN\"}" ${NOTIFY_SLACK_URL}
