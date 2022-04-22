@@ -1,10 +1,13 @@
 stages:
   - build
+  - test
   - release
+include:
+  - template: Security/SAST.gitlab-ci.yml
 
-build-code-job:  # задача с именем build-code-job
+build-code-job: # задача с именем build-code-job
   stage: build   # этап build
-  script:        # объявление скрипта
+  script: # объявление скрипта
     - echo "ARTIFACT_JOB_ID=${CI_JOB_ID}" > CI_JOB_ID.txt  # сохранение номера задачи в файл, чтобы в дальнейшем использовать для копирования артефакта
     - cd backend
     - mvn package -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository # запуск сборки кода
@@ -19,8 +22,16 @@ build-code-job:  # задача с именем build-code-job
     paths:
       - sausage-store-0.0.1/public_html  # сохранение собранного фронтэнда как артефакт
       - sausage-store-0.0.1/sausage-store-0.0.1.jar # сохранение собранного бэкенда как артефакт
+      - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
     reports:
       dotenv: CI_JOB_ID.txt # сохранение файла с переменными как артефакт
+
+spotbugs-sast:
+  dependencies:
+    - build-code-job
+  variables:
+    COMPILE: "false"
+    MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
 
 upload-release: # задача с именем upload-release
   stage: release # этап release
