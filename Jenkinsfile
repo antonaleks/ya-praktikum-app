@@ -34,7 +34,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Save artifacts') {
             steps {
                 archiveArtifacts(artifacts: 'backend/target/sausage-store-0.0.1-SNAPSHOT.jar')
