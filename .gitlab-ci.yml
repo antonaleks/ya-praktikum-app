@@ -27,11 +27,26 @@ build-code-job: # задача с именем build-code-job
       dotenv: CI_JOB_ID.txt # сохранение файла с переменными как артефакт
 
 spotbugs-sast:
+  stage: test
   dependencies:
     - build-code-job
   variables:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
+
+sonarqube-backend-sast:
+  stage: test
+  image: maven:3.8-openjdk-16
+  dependencies:
+    - build-code-job
+  script:
+    - cd backend
+    - >
+      mvn verify sonar:sonar -Dsonar.qualitygate.wait=true
+      -Dsonar.projectKey=${SONAR_PROJECT_KEY}
+      -Dsonar.host.url=${SONARQUBE_URL}
+      -Dsonar.login=${SONAR_LOGIN}
+      -Dsonar.qualitygate.wait=true
 
 upload-release: # задача с именем upload-release
   stage: release # этап release
