@@ -46,8 +46,22 @@ sonarqube-backend-sast:
       -Dsonar.projectKey=${SONAR_PROJECT_KEY}
       -Dsonar.host.url=${SONARQUBE_URL}
       -Dsonar.login=${SONAR_LOGIN}
-      -Dsonar.qualitygate.wait=true
       -Dsonar.projectName=05_АНТОНАЛЕКСЕЕВ_БЭКЭНД
+
+sonarqube-frontend-sast:
+  stage: test
+  image: sonarsource/sonar-scanner-cli:latest
+  dependencies:
+    - build-code-job
+  script:
+    - cd frontend
+    - >
+      sonar-scanner \
+        -Dsonar.projectKey=sonarqube-front-alekseev \
+        -Dsonar.sources=. \
+        -Dsonar.host.url=${SONARQUBE_URL} \
+        -Dsonar.login=${SONAR_LOGIN}
+        -Dsonar.projectName=05_АНТОНАЛЕКСЕЕВ_ФРОНТЕНД
 
 upload-release: # задача с именем upload-release
   stage: release # этап release
