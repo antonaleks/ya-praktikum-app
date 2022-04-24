@@ -47,6 +47,7 @@ sonarqube-backend-sast:
       -Dsonar.host.url=${SONARQUBE_URL}
       -Dsonar.login=${SONAR_LOGIN}
       -Dsonar.qualitygate.wait=true
+      -Dsonar.projectName=05_АНТОНАЛЕКСЕЕВ_БЭКЭНД
 
 upload-release: # задача с именем upload-release
   stage: release # этап release
