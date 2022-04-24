@@ -46,7 +46,7 @@ sonarqube-backend-sast:
       -Dsonar.projectKey=${SONAR_PROJECT_KEY_BACK}
       -Dsonar.host.url=${SONARQUBE_URL}
       -Dsonar.login=${SONAR_LOGIN}
-      -Dsonar.projectName=05_АНТОНАЛЕКСЕЕВ_БЭКЭНД
+      -Dsonar.projectName=${SONAR_PROJECT_NAME_BACK}
 
 sonarqube-frontend-sast:
   stage: test
@@ -61,7 +61,7 @@ sonarqube-frontend-sast:
         -Dsonar.sources=. \
         -Dsonar.host.url=${SONARQUBE_URL} \
         -Dsonar.login=${SONAR_LOGIN} \
-        -Dsonar.projectName=05_АНТОНАЛЕКСЕЕВ_ФРОНТЕНД
+        -Dsonar.projectName=${SONAR_PROJECT_NAME_FRONT}
 
 upload-release: # задача с именем upload-release
   stage: release # этап release
