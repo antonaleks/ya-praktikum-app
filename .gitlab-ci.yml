@@ -43,7 +43,7 @@ sonarqube-backend-sast:
     - cd backend
     - >
       mvn verify sonar:sonar -Dsonar.qualitygate.wait=true
-      -Dsonar.projectKey=${SONAR_PROJECT_KEY}
+      -Dsonar.projectKey=${SONAR_PROJECT_KEY_BACK}
       -Dsonar.host.url=${SONARQUBE_URL}
       -Dsonar.login=${SONAR_LOGIN}
       -Dsonar.projectName=05_АНТОНАЛЕКСЕЕВ_БЭКЭНД
@@ -57,10 +57,10 @@ sonarqube-frontend-sast:
     - cd frontend
     - >
       sonar-scanner \
-        -Dsonar.projectKey=sonarqube-front-alekseev \
+        -Dsonar.projectKey=${SONAR_PROJECT_KEY_FRONT} \
         -Dsonar.sources=. \
         -Dsonar.host.url=${SONARQUBE_URL} \
-        -Dsonar.login=${SONAR_LOGIN}
+        -Dsonar.login=${SONAR_LOGIN} \
         -Dsonar.projectName=05_АНТОНАЛЕКСЕЕВ_ФРОНТЕНД
 
 upload-release: # задача с именем upload-release
