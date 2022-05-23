@@ -5,6 +5,11 @@ stages:
 include:
   - template: Security/SAST.gitlab-ci.yml
 
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths:
+  - .npm/
+
 build-code-job: # задача с именем build-code-job
   stage: build   # этап build
   script: # объявление скрипта
@@ -12,7 +17,7 @@ build-code-job: # задача с именем build-code-job
     - cd backend
     - mvn package -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository # запуск сборки кода
     - cd ../frontend
-    - npm install # загрузка всех сторонних зависимостей
+    - npm ci --cache .npm --prefer-offline # загрузка зависимостей из кеша
     - npm run build # запуск сборки кода
     - cd ..
     - mkdir sausage-store-0.0.1  # создание директории, в которую копируются артефакты. Это нужно для организации удобной структуры архива
@@ -69,8 +74,10 @@ upload-release: # задача с именем upload-release
   #   changes:
   #   - backend//*
   #   - frontend//*
-  script:
+  script: 
     - echo "Get artifact from job ${ARTIFACT_JOB_ID}"
+    - echo "PRIVATE-TOKEN: ${MY_TOKEN} ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${ARTIFACT_JOB_ID}/artifacts/${CI_COMMIT_BRANCH}/download"
+    - echo "JOB-TOKEN: ${CI_JOB_TOKEN}    -T sausage-store-0.0.1.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sausage-store/${CI_COMMIT_SHA}/"
     - > # скачивание артефакта в файл sausage-store-0.0.1.zip
       curl --location --output sausage-store-0.0.1.zip -H "PRIVATE-TOKEN: ${MY_TOKEN}"
       "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${ARTIFACT_JOB_ID}/artifacts/${CI_COMMIT_BRANCH}/download"
