@@ -15,7 +15,7 @@ class ReportGeneratorTaskTest {
     void setUp() {
         reporter = mock(Logger.class);
         logger = mock(Logger.class);
-        
+
         reportGeneratorTask.reporter = reporter;
         reportGeneratorTask.logger = logger;
     }
