@@ -25,8 +25,8 @@
     </properties>
     <distributionManagement>
         <repository>
-            <id>sausage-store</id>
-            <name>sausage-store</name>
+            <id>backtest</id>
+            <name>backtest</name>
             <url>${env.NEXUS_REPO_BACKEND_URL}/sausage-store/</url>
         </repository>
     </distributionManagement>
