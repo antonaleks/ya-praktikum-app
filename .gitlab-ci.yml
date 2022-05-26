@@ -25,7 +25,7 @@ build-code-job: # задача с именем build-code-job
     - npm run build # запуск сборки кода
     - cd ..
     - mkdir sausage-store-${VERSION}  # создание директории, в которую копируются артефакты. Это нужно для организации удобной структуры архива
-    - mv backend/target/sausage-store-${VERSION}-SNAPSHOT.jar sausage-store-${VERSION}/sausage-store-${VERSION}.jar # копирование собранного бэкенда
+    - mv backend/target/sausage-store-${VERSION}.jar sausage-store-${VERSION}/sausage-store-${VERSION}.jar # копирование собранного бэкенда
     - mv frontend/dist/frontend sausage-store-${VERSION}/public_html # копирование собранного фронтэнда
   artifacts:
     paths:
@@ -35,7 +35,7 @@ build-code-job: # задача с именем build-code-job
     reports:
       dotenv: CI_JOB_ID.txt # сохранение файла с переменными как артефакт
 
-spotbugs-sast:
+.spotbugs-sast:
   stage: test
   dependencies:
     - build-code-job
@@ -43,7 +43,7 @@ spotbugs-sast:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
 
-sonarqube-backend-sast:
+.sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
   dependencies:
@@ -57,7 +57,7 @@ sonarqube-backend-sast:
       -Dsonar.login=${SONAR_LOGIN}
       -Dsonar.projectName=${SONAR_PROJECT_NAME_BACK}
 
-sonarqube-frontend-sast:
+.sonarqube-frontend-sast:
   stage: test
   image: sonarsource/sonar-scanner-cli:latest
   dependencies:
