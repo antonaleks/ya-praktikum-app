@@ -4,7 +4,8 @@ stages:
   - release
 include:
   - template: Security/SAST.gitlab-ci.yml
-
+variables:
+  VERSION: 1.0.${CI_PIPELINE_ID}
 
 build-code-job: # задача с именем build-code-job
   stage: build   # этап build
@@ -18,18 +19,18 @@ build-code-job: # задача с именем build-code-job
   script: # объявление скрипта
     - echo "ARTIFACT_JOB_ID=${CI_JOB_ID}" > CI_JOB_ID.txt  # сохранение номера задачи в файл, чтобы в дальнейшем использовать для копирования артефакта
     - cd backend
-    - mvn package -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository # запуск сборки кода
+    - mvn package -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dversion.application=${VERSION}   # запуск сборки кода
     - cd ../frontend
     - npm ci --cache .npm --prefer-offline # загрузка зависимостей из кеша
     - npm run build # запуск сборки кода
     - cd ..
-    - mkdir sausage-store-0.0.1  # создание директории, в которую копируются артефакты. Это нужно для организации удобной структуры архива
-    - mv backend/target/sausage-store-0.0.1-SNAPSHOT.jar sausage-store-0.0.1/sausage-store-0.0.1.jar # копирование собранного бэкенда
-    - mv frontend/dist/frontend sausage-store-0.0.1/public_html # копирование собранного фронтэнда
+    - mkdir sausage-store-${VERSION}  # создание директории, в которую копируются артефакты. Это нужно для организации удобной структуры архива
+    - mv backend/target/sausage-store-${VERSION}-SNAPSHOT.jar sausage-store-${VERSION}/sausage-store-${VERSION}.jar # копирование собранного бэкенда
+    - mv frontend/dist/frontend sausage-store-${VERSION}/public_html # копирование собранного фронтэнда
   artifacts:
     paths:
-      - sausage-store-0.0.1/public_html  # сохранение собранного фронтэнда как артефакт
-      - sausage-store-0.0.1/sausage-store-0.0.1.jar # сохранение собранного бэкенда как артефакт
+      - sausage-store-${VERSION}/public_html  # сохранение собранного фронтэнда как артефакт
+      - sausage-store-${VERSION}/sausage-store-${VERSION}.jar # сохранение собранного бэкенда как артефакт
       - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
     reports:
       dotenv: CI_JOB_ID.txt # сохранение файла с переменными как артефакт
@@ -72,20 +73,29 @@ sonarqube-frontend-sast:
         -Dsonar.projectName=${SONAR_PROJECT_NAME_FRONT}
 
 upload-release: # задача с именем upload-release
-  variables:
-    GIT_STRATEGY: none
+#  variables:
+#    GIT_STRATEGY: none
   stage: release # этап release
+  dependencies:
+    - build-code-job
   # only: # запуск этого шага только при изменениях в директориях backend и frontend
   #   changes:
   #   - backend//*
   #   - frontend//*
   script:
     - echo "Get artifact from job ${ARTIFACT_JOB_ID}"
-    - > # скачивание артефакта в файл sausage-store-0.0.1.zip
-      curl --location --output sausage-store-0.0.1.zip -H "PRIVATE-TOKEN: ${MY_TOKEN}"
-      "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${ARTIFACT_JOB_ID}/artifacts/"
-    - > # сохранение артефакта в package registry
-      curl -sSL -H "JOB-TOKEN: ${CI_JOB_TOKEN}"
-      -T sausage-store-0.0.1.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sausage-store/${CI_COMMIT_SHA}/"
-    - > # уведомление в slack о выполнении пайплайна
-      curl -X POST -H "Content-type: application/json" --data "{\"text\":\"$CI_COMMIT_BRANCH of $CI_PROJECT_TITLE from $GITLAB_USER_LOGIN\"}" ${NOTIFY_SLACK_URL}
+    - cd backend
+    - mvn -s settings.xml deploy -DskipTests
+    - cd ../sausage-store-${VERSION}
+    - tar czvf sausage-store-${VERSION}.tar.gz public_html
+    - >
+      curl -v -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/${VERSION}/sausage-store-${VERSION}.tar.gz
+#    - > # скачивание артефакта в файл sausage-store-${VERSION}.zip
+#      curl --location --output sausage-store-${VERSION}.zip -H "PRIVATE-TOKEN: ${MY_TOKEN}"
+#      "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${ARTIFACT_JOB_ID}/artifacts/"
+#    - > # сохранение артефакта в package registry
+#      curl -sSL -H "JOB-TOKEN: ${CI_JOB_TOKEN}"
+#      -T sausage-store-${VERSION}.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sausage-store/${CI_COMMIT_SHA}/"
+
+#    - > # уведомление в slack о выполнении пайплайна
+#      curl -X POST -H "Content-type: application/json" --data "{\"text\":\"$CI_COMMIT_BRANCH of $CI_PROJECT_TITLE from $GITLAB_USER_LOGIN\"}" ${NOTIFY_SLACK_URL}
