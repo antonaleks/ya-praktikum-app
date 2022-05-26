@@ -9,10 +9,12 @@ include:
 build-code-job: # задача с именем build-code-job
   stage: build   # этап build
   cache:
-    key: $CI_COMMIT_REF_SLUG
-    paths:
-      - frontend/.npm/
-      - .m2/repository
+    - key: npm
+      paths:
+        - frontend/.npm/
+    - key: maven
+      paths:
+        - .m2/repository
   script: # объявление скрипта
     - echo "ARTIFACT_JOB_ID=${CI_JOB_ID}" > CI_JOB_ID.txt  # сохранение номера задачи в файл, чтобы в дальнейшем использовать для копирования артефакта
     - cd backend
