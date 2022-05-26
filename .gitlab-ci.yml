@@ -2,7 +2,7 @@ stages:
   - build
   - test
   - release
-.include:
+include:
   - template: Security/SAST.gitlab-ci.yml
 variables:
   VERSION: 1.0.${CI_PIPELINE_ID}
@@ -35,7 +35,7 @@ build-code-job: # задача с именем build-code-job
     reports:
       dotenv: CI_JOB_ID.txt # сохранение файла с переменными как артефакт
 
-.spotbugs-sast:
+spotbugs-sast:
   stage: test
   dependencies:
     - build-code-job
@@ -43,7 +43,7 @@ build-code-job: # задача с именем build-code-job
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
 
-.sonarqube-backend-sast:
+sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
   dependencies:
@@ -57,7 +57,7 @@ build-code-job: # задача с именем build-code-job
       -Dsonar.login=${SONAR_LOGIN}
       -Dsonar.projectName=${SONAR_PROJECT_NAME_BACK}
 
-.sonarqube-frontend-sast:
+sonarqube-frontend-sast:
   stage: test
   image: sonarsource/sonar-scanner-cli:latest
   dependencies:
