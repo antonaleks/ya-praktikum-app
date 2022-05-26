@@ -19,7 +19,7 @@ build-code-job: # задача с именем build-code-job
   script: # объявление скрипта
     - echo "ARTIFACT_JOB_ID=${CI_JOB_ID}" > CI_JOB_ID.txt  # сохранение номера задачи в файл, чтобы в дальнейшем использовать для копирования артефакта
     - cd backend
-    - mvn package -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dversion.application=${VERSION}   # запуск сборки кода
+    - mvn package -Dversion.application=${VERSION}   # запуск сборки кода
     - cd ../frontend
     - npm ci --cache .npm --prefer-offline # загрузка зависимостей из кеша
     - npm run build # запуск сборки кода
