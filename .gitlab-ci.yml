@@ -89,7 +89,7 @@ upload-release: # задача с именем upload-release
     - cd ../sausage-store-${VERSION}
     - tar czvf sausage-store-${VERSION}.tar.gz public_html
     - >
-      curl -v -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${FRONT_ARTIFACT}
+      curl -v -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/$VERSION/sausage-store-$VERSION.tar.gz
     #    - > # скачивание артефакта в файл sausage-store-${VERSION}.zip
     #      curl --location --output sausage-store-${VERSION}.zip -H "PRIVATE-TOKEN: ${MY_TOKEN}"
     #      "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${ARTIFACT_JOB_ID}/artifacts/"
