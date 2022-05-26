@@ -84,9 +84,9 @@ upload-release: # задача с именем upload-release
   #   - frontend//*
   script:
     - echo "Get artifact from job ${ARTIFACT_JOB_ID}"
-#    - cd backend
+    - cd backend
 #    - mvn -s settings.xml deploy -DskipTests -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dversion.application=${VERSION}
-#    - cd ../sausage-store-${VERSION}
+    - cd ../sausage-store-${VERSION}
     - tar czvf sausage-store-${VERSION}.tar.gz public_html
     - >
       curl -v -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/${VERSION}/sausage-store-${VERSION}.tar.gz
