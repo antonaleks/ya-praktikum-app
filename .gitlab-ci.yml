@@ -73,8 +73,8 @@ build-code-job: # задача с именем build-code-job
         -Dsonar.projectName=${SONAR_PROJECT_NAME_FRONT}
 
 upload-release: # задача с именем upload-release
-#  variables:
-#    GIT_STRATEGY: none
+  #  variables:
+  #    GIT_STRATEGY: none
   stage: release # этап release
   dependencies:
     - build-code-job
@@ -82,6 +82,9 @@ upload-release: # задача с именем upload-release
   #   changes:
   #   - backend//*
   #   - frontend//*
+  variables:
+    FRONT_ARTIFACT: ${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/${VERSION}/sausage-store-${VERSION}.tar.gz
+    BACK_ARTIFACT:  ${NEXUS_REPO_BACKEND_URL}/com/yandex/practicum/devops/sausage-store/${VERSION}/sausage-store-${VERSION}.jar
   script:
     - echo "Get artifact from job ${ARTIFACT_JOB_ID}"
     - cd backend
@@ -89,13 +92,13 @@ upload-release: # задача с именем upload-release
     - cd ../sausage-store-${VERSION}
     - tar czvf sausage-store-${VERSION}.tar.gz public_html
     - >
-      curl -v -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/${VERSION}/sausage-store-${VERSION}.tar.gz
-#    - > # скачивание артефакта в файл sausage-store-${VERSION}.zip
-#      curl --location --output sausage-store-${VERSION}.zip -H "PRIVATE-TOKEN: ${MY_TOKEN}"
-#      "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${ARTIFACT_JOB_ID}/artifacts/"
-#    - > # сохранение артефакта в package registry
-#      curl -sSL -H "JOB-TOKEN: ${CI_JOB_TOKEN}"
-#      -T sausage-store-${VERSION}.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sausage-store/${CI_COMMIT_SHA}/"
+      curl -v -u "${NEXUS_REPO_USER}:${NEXUS_REPO_PASS}" --upload-file sausage-store-${VERSION}.tar.gz ${FRONT_ARTIFACT}
+    #    - > # скачивание артефакта в файл sausage-store-${VERSION}.zip
+    #      curl --location --output sausage-store-${VERSION}.zip -H "PRIVATE-TOKEN: ${MY_TOKEN}"
+    #      "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${ARTIFACT_JOB_ID}/artifacts/"
+    #    - > # сохранение артефакта в package registry
+    #      curl -sSL -H "JOB-TOKEN: ${CI_JOB_TOKEN}"
+    #      -T sausage-store-${VERSION}.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sausage-store/${CI_COMMIT_SHA}/"
 
-#    - > # уведомление в slack о выполнении пайплайна
-#      curl -X POST -H "Content-type: application/json" --data "{\"text\":\"$CI_COMMIT_BRANCH of $CI_PROJECT_TITLE from $GITLAB_USER_LOGIN\"}" ${NOTIFY_SLACK_URL}
+    - > # уведомление в slack о выполнении пайплайна
+      curl -X POST -H "Content-type: application/json" --data "{\"text\":\"Вышла новая версия сосисочной — $VERSION from $GITLAB_USER_LOGIN. Скачать фронт можно по ссылке — ${FRONT_ARTIFACT}. Скачать бэкенд можно по ссылке — ${BACK_ARTIFACT}\"}" ${NOTIFY_SLACK_URL}
