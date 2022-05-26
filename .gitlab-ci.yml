@@ -83,8 +83,8 @@ upload-release: # задача с именем upload-release
   #   - backend//*
   #   - frontend//*
   variables:
-    FRONT_ARTIFACT: ${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/$VERSION/sausage-store-$VERSION.tar.gz
-    BACK_ARTIFACT:  ${NEXUS_REPO_BACKEND_URL}/com/yandex/practicum/devops/sausage-store/$VERSION/sausage-store-$VERSION.jar
+    FRONT_ARTIFACT: "${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/$VERSION/sausage-store-$VERSION.tar.gz"
+    BACK_ARTIFACT:  "${NEXUS_REPO_BACKEND_URL}/com/yandex/practicum/devops/sausage-store/$VERSION/sausage-store-$VERSION.jar"
   script:
     - echo "Get artifact from job ${ARTIFACT_JOB_ID}"
     - cd backend
