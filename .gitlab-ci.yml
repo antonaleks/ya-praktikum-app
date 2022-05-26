@@ -83,8 +83,8 @@ upload-release: # задача с именем upload-release
   #   - backend//*
   #   - frontend//*
   variables:
-    FRONT_ARTIFACT: ${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/${VERSION}/sausage-store-${VERSION}.tar.gz
-    BACK_ARTIFACT:  ${NEXUS_REPO_BACKEND_URL}/com/yandex/practicum/devops/sausage-store/${VERSION}/sausage-store-${VERSION}.jar
+    FRONT_ARTIFACT: ${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/$VERSION/sausage-store-$VERSION.tar.gz
+    BACK_ARTIFACT:  ${NEXUS_REPO_BACKEND_URL}/com/yandex/practicum/devops/sausage-store/$VERSION/sausage-store-$VERSION.jar
   script:
     - echo "Get artifact from job ${ARTIFACT_JOB_ID}"
     - cd backend
@@ -101,4 +101,4 @@ upload-release: # задача с именем upload-release
     #      -T sausage-store-${VERSION}.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sausage-store/${CI_COMMIT_SHA}/"
 
     - > # уведомление в slack о выполнении пайплайна
-      curl -X POST -H "Content-type: application/json" --data "{\"text\":\"Вышла новая версия сосисочной — $VERSION from $GITLAB_USER_LOGIN. Скачать фронт можно по ссылке — ${FRONT_ARTIFACT}. Скачать бэкенд можно по ссылке — ${BACK_ARTIFACT}\"}" ${NOTIFY_SLACK_URL}
+      curl -X POST -H "Content-type: application/json" --data "{\"text\":\"Вышла новая версия сосисочной — $VERSION from $GITLAB_USER_LOGIN. Скачать фронт можно по ссылке — $FRONT_ARTIFACT. Скачать бэкенд можно по ссылке — $BACK_ARTIFACT\"}" ${NOTIFY_SLACK_URL}
