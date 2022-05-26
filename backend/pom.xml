@@ -27,7 +27,7 @@
         <repository>
             <id>sausage-store</id>
             <name>sausage-store</name>
-            <url>${env.NEXUS_REPO_BACKEND_URL}/sausage-store/</url>
+            <url>${env.NEXUS_REPO_BACKEND_URL}</url>
         </repository>
     </distributionManagement>
     <dependencies>
