@@ -76,8 +76,6 @@ upload-release: # задача с именем upload-release
 #  variables:
 #    GIT_STRATEGY: none
   stage: release # этап release
-  dependencies:
-    - build-code-job
   # only: # запуск этого шага только при изменениях в директориях backend и frontend
   #   changes:
   #   - backend//*
@@ -85,7 +83,7 @@ upload-release: # задача с именем upload-release
   script:
     - echo "Get artifact from job ${ARTIFACT_JOB_ID}"
     - cd backend
-    - mvn -s settings.xml deploy -DskipTests -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dversion.application=${VERSION}
+    - mvn -s settings.xml deploy -DskipTests
     - cd ../sausage-store-${VERSION}
     - tar czvf sausage-store-${VERSION}.tar.gz public_html
     - >
