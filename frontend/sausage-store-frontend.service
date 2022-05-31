@@ -1,0 +1,14 @@
+[Unit]
+Description=Service for frontend of sausage-store application
+
+[Service]
+User=front-user
+ExecStart=http-server /home/front-user/front/ -p 443 --proxy http://localhost:8080
+Restart=always
+StandardOutput=file:/logs/out-front.log
+StandardError=file:/logs/out-front.log
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
