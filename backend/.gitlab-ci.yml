@@ -33,6 +33,7 @@ spotbugs-sast:
   stage: test
   cache:
     <<: *global_cache
+    policy: pull
   variables:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
@@ -53,6 +54,7 @@ upload-release: # задача с именем upload-release
   stage: release # этап release
   cache:
     <<: *global_cache
+    policy: pull
   script:
     - cd backend
     - NEXUS_ENCODE_PASSWORD=$(echo $NEXUS_REPO_PASS | base64 -d)
