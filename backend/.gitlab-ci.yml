@@ -4,7 +4,7 @@ stages:
   - release
   - deploy
 include:
-  #- template: Security/SAST.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
   - local: /template.gitlab-ci.yml
 
 variables:
@@ -29,7 +29,7 @@ build-code-job: # задача с именем build-code-job
 #        - sausage-store-${VERSION}/sausage-store-${VERSION}.jar # сохранение собранного бэкенда как артефакт
 #        - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
 
-.spotbugs-sast:
+spotbugs-sast:
   stage: test
   cache:
     <<: *global_cache
@@ -38,7 +38,7 @@ build-code-job: # задача с именем build-code-job
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
 
-.sonarqube-backend-sast:
+sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
   script:

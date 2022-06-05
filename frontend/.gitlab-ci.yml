@@ -51,36 +51,48 @@ upload-release: # задача с именем upload-release
     - tar czvf sausage-store-${VERSION}.tar.gz sausage-store-${VERSION}/public_html
     - >
       curl -v -u "${NEXUS_REPO_USER}:$(echo $NEXUS_REPO_PASS | base64 -d)" --upload-file sausage-store-${VERSION}.tar.gz ${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/$VERSION/sausage-store-$VERSION.tar.gz
-    - > # уведомление в slack о выполнении пайплайна
-      curl -X POST -H "Content-type: application/json" --data "{
-                                                       	\"blocks\": [
-                                                       		{
-                                                       			\"type\": \"section\",
-                                                       			\"text\": {
-                                                       				\"type\": \"mrkdwn\",
-                                                       				\"text\": \"Вышла новая версия сосисочной :pepeclap: — $VERSION from $GITLAB_USER_LOGIN.\nСкачать фронт можно по ссылке\"
-                                                       			},
-                                                       			\"accessory\": {
-                                                       				\"type\": \"button\",
-                                                       				\"text\": {
-                                                       					\"type\": \"plain_text\",
-                                                       					\"text\": \"Frontend\",
-                                                       					\"emoji\": true
-                                                       				},
-                                                       				\"value\": \"Frontend\",
-                                                       				\"url\": \"${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/$VERSION/sausage-store-$VERSION.tar.gz\",
-                                                       				\"action_id\": \"button-action\"
-                                                       			}
-                                                       		}
-                                                       	]
-                                                       }" ${NOTIFY_SLACK_URL}
+    - |
+      generate_post_data()
+      {
+        cat <<EOF
+          {
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "Вышла новая версия сосисочной :pepeclap: — $VERSION from $GITLAB_USER_LOGIN.\nСкачать фронт можно по ссылке"
+                    },
+                    "accessory": {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Frontend",
+                            "emoji": true
+                        },
+                        "value": "Frontend",
+                        "url": "${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/$VERSION/sausage-store-$VERSION.tar.gz",
+                        "action_id": "button-action"
+                    }
+                }
+            ]
+           }
+        EOF
+      }
+      curl -X POST -H "Content-type: application/json" --data  "$(generate_post_data)" ${NOTIFY_SLACK_URL}
 
 
 
 deploy:
   stage: deploy
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: always
   extends: .ssh-connection
+  environment:
+    name: staging
+    url: http://$DEV_HOST:$DEV_APP_PORT
   script:
     - scp ./frontend/sausage-store-frontend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-frontend.service
     - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_FRONTEND_URL=${NEXUS_REPO_FRONTEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";setsid /bin/bash -s " < ./frontend/deploy.sh
