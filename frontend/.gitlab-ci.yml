@@ -91,7 +91,7 @@ deploy:
     - when: always
   extends: .ssh-connection
   environment:
-    name: staging
+    name: staging-front
     url: http://$DEV_HOST:$DEV_APP_PORT
   script:
     - scp ./frontend/sausage-store-frontend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-frontend.service
