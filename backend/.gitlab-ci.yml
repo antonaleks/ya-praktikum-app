@@ -91,7 +91,7 @@ deploy:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
-    - when: always
+    - when: on_success
   extends: .ssh-connection
   environment:
     name: staging-back

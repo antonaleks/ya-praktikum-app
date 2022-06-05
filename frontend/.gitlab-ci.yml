@@ -54,30 +54,30 @@ upload-release: # задача с именем upload-release
     - |
       generate_post_data()
       {
-        cat <<EOF
-          {
-            "blocks": [
-                {
-                    "type": "section",
+      cat <<EOF
+      {
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Вышла новая версия сосисочной :pepeclap: — $VERSION from $GITLAB_USER_LOGIN.\nСкачать фронт можно по ссылке"
+                },
+                "accessory": {
+                    "type": "button",
                     "text": {
-                        "type": "mrkdwn",
-                        "text": "Вышла новая версия сосисочной :pepeclap: — $VERSION from $GITLAB_USER_LOGIN.\nСкачать фронт можно по ссылке"
+                        "type": "plain_text",
+                        "text": "Frontend",
+                        "emoji": true
                     },
-                    "accessory": {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Frontend",
-                            "emoji": true
-                        },
-                        "value": "Frontend",
-                        "url": "${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/$VERSION/sausage-store-$VERSION.tar.gz",
-                        "action_id": "button-action"
-                    }
+                    "value": "Frontend",
+                    "url": "${NEXUS_REPO_FRONTEND_URL}/sausage-store-front/sausage-store/$VERSION/sausage-store-$VERSION.tar.gz",
+                    "action_id": "button-action"
                 }
-            ]
-           }
-        EOF
+            }
+        ]
+      }
+      EOF
       }
       curl -X POST -H "Content-type: application/json" --data  "$(generate_post_data)" ${NOTIFY_SLACK_URL}
 
@@ -88,11 +88,11 @@ deploy:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
-    - when: always
+    - when: on_success
   extends: .ssh-connection
   environment:
     name: staging-front
     url: http://$DEV_HOST:$DEV_APP_PORT
   script:
     - scp ./frontend/sausage-store-frontend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-frontend.service
-    - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_FRONTEND_URL=${NEXUS_REPO_FRONTEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";setsid /bin/bash -s " < ./frontend/deploy.sh
+    - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}"; export "FRONT_PORT=${DEV_APP_PORT}";export "NEXUS_REPO_FRONTEND_URL=${NEXUS_REPO_FRONTEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";setsid /bin/bash -s " < ./frontend/deploy.sh

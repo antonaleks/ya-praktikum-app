@@ -3,7 +3,7 @@ Description=Service for frontend of sausage-store application
 
 [Service]
 User=front-user
-ExecStart=http-server /home/front-user/front/ -p 443 --proxy http://localhost:8080
+ExecStart=http-server /home/front-user/front/ -p $FRONT_PORT --proxy http://localhost:8080
 Restart=always
 StandardOutput=file:/logs/out-front.log
 StandardError=file:/logs/out-front.log
