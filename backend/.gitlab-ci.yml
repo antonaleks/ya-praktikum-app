@@ -88,6 +88,10 @@ upload-release: # задача с именем upload-release
 
 deploy:
   stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: always
   extends: .ssh-connection
   environment:
     name: staging
