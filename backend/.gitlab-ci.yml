@@ -82,9 +82,9 @@ upload-release: # задача с именем upload-release
                     }
                 ]
                }
-        EOF
-        )
-        curl -X POST -H "Content-type: application/json" --data "$DATA" ${NOTIFY_SLACK_URL}
+      EOF
+      )
+      curl -X POST -H "Content-type: application/json" --data "$DATA" ${NOTIFY_SLACK_URL}
 
 deploy:
   stage: deploy
