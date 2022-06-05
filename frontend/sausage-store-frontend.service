@@ -3,6 +3,7 @@ Description=Service for frontend of sausage-store application
 
 [Service]
 User=front-user
+EnvironmentFile=-/etc/default/sausage-store-front
 ExecStart=http-server /home/front-user/front/ -p $FRONT_PORT --proxy http://localhost:8080
 Restart=always
 StandardOutput=file:/logs/out-front.log
