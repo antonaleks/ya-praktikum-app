@@ -4,7 +4,7 @@
         <server>
             <id>sausage-store</id>
             <username>${env.NEXUS_REPO_USER}</username>
-            <password>${env.NEXUS_REPO_PASS}</password>
+            <password>${nexus.password}</password>
         </server>
     </servers>
 </settings>

@@ -3,20 +3,24 @@ stages:
   - test
   - release
   - deploy
-.include:
+include:
   - template: Security/SAST.gitlab-ci.yml
+  - local: /template.gitlab-ci.yml
+
 variables:
   VERSION: 1.0.${CI_PIPELINE_ID}
-  MAVEN_REPO_PATH: ./.m2/repository
-  JAVA_OPTS: -XX:MaxRAMPercentage=90
+  #JAVA_OPTS: -XX:MaxRAMPercentage=90
+  SAST_EXCLUDED_ANALYZERS: "eslint,nodejs-scan-sast"
 
-cache:
-  - key: maven
-    paths:
-      - .m2/repository
+cache: &global_cache
+  key: maven
+  paths:
+    - .m2/repository
 
 build-code-job: # задача с именем build-code-job
   stage: build   # этап build
+  cache:
+    <<: *global_cache
   script: # объявление скрипта
     - cd backend
     - mvn package -Dversion.application=${VERSION} -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository
@@ -25,10 +29,10 @@ build-code-job: # задача с именем build-code-job
 #        - sausage-store-${VERSION}/sausage-store-${VERSION}.jar # сохранение собранного бэкенда как артефакт
 #        - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
 
-.spotbugs-sast:
+spotbugs-sast:
   stage: test
-  dependencies:
-    - build-code-job
+  cache:
+    <<: *global_cache
   variables:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
@@ -36,8 +40,6 @@ build-code-job: # задача с именем build-code-job
 sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
-  dependencies:
-    - build-code-job
   script:
     - cd backend
     - >
@@ -49,9 +51,12 @@ sonarqube-backend-sast:
 
 upload-release: # задача с именем upload-release
   stage: release # этап release
+  cache:
+    <<: *global_cache
   script:
     - cd backend
-    - mvn -s settings.xml deploy -DskipTests -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dversion.application=${VERSION}
+    - NEXUS_ENCODE_PASSWORD=$(echo $NEXUS_REPO_PASS | base64 -d)
+    - mvn -s settings.xml deploy -DskipTests -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dversion.application=${VERSION} -Dnexus.password=${NEXUS_ENCODE_PASSWORD}
     - - > # уведомление в slack о выполнении пайплайна
         curl -X POST -H "Content-type: application/json" --data "{
                                                          	\"blocks\": [
@@ -78,16 +83,8 @@ upload-release: # задача с именем upload-release
 
 deploy:
   stage: deploy
-  before_script:
-    #устанавливаем ssh-agent для удобства аутентификации по ssh
-    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
-    - eval $(ssh-agent -s)
-    #сохраняем сгенеренный ранее приватный ключ для раннера
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 600 ~/.ssh
-    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
+  when: manual
+  extends: .ssh-connection
   script:
     - scp ./backend/sausage-store-backend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-backend.service
-    - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=${NEXUS_REPO_PASS}";setsid /bin/bash -s " < ./backend/deploy.sh
+    - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";setsid /bin/bash -s " < ./backend/deploy.sh
