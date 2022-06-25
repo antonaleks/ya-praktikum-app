@@ -3,10 +3,11 @@ Description=Service for backend of sausage-store application
 
 [Service]
 User=jarservice
-EnvironmentFile=-/etc/default/sausage-store
+Environment=LOG_PATH=/opt/log/
+Environment=REPORT_PATH=/var/www-data/htdocs/
 Restart=always
-StandardOutput=file:/logs/out.log
-StandardError=file:/logs/out.log
+StandardOutput=file:/opt/log/sausage-store.log
+StandardError=file:/opt/log/sausage-store.log
 
 ExecStart=/usr/bin/java \
 -Dmyserver.basePath='/home/jarservice/' \

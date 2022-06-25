@@ -33,6 +33,7 @@ spotbugs-sast:
   stage: test
   cache:
     <<: *global_cache
+    policy: pull
   variables:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
@@ -53,38 +54,48 @@ upload-release: # задача с именем upload-release
   stage: release # этап release
   cache:
     <<: *global_cache
+    policy: pull
   script:
     - cd backend
     - NEXUS_ENCODE_PASSWORD=$(echo $NEXUS_REPO_PASS | base64 -d)
     - mvn -s settings.xml deploy -DskipTests -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository -Dversion.application=${VERSION} -Dnexus.password=${NEXUS_ENCODE_PASSWORD}
-    - - > # уведомление в slack о выполнении пайплайна
-        curl -X POST -H "Content-type: application/json" --data "{
-                                                         	\"blocks\": [
-                                                         		{
-                                                         			\"type\": \"section\",
-                                                         			\"text\": {
-                                                         				\"type\": \"mrkdwn\",
-                                                         				\"text\": \"Вышла новая версия сосисочной :pepe-exhausted: — $VERSION from $GITLAB_USER_LOGIN.\nСкачать бекенд можно по ссылке\"
-                                                         			},
-                                                         			\"accessory\": {
-                                                         				\"type\": \"button\",
-                                                         				\"text\": {
-                                                         					\"type\": \"plain_text\",
-                                                         					\"text\": \"Backend\",
-                                                         					\"emoji\": true
-                                                         				},
-                                                         				\"value\": \"Frontend\",
-                                                         				\"url\": \"${NEXUS_REPO_BACKEND_URL}/com/yandex/practicum/devops/sausage-store/$VERSION/sausage-store-$VERSION.jar\",
-                                                         				\"action_id\": \"button-action\"
-                                                         			}
-                                                         		}
-                                                         	]
-                                                         }" ${NOTIFY_SLACK_URL}
+    - |
+      DATA=$(cat <<EOF
+      {"blocks": [
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "Вышла новая версия сосисочной :pepe-exhausted: — $VERSION from $GITLAB_USER_LOGIN.\nСкачать бекенд можно по ссылке"
+                        },
+                        "accessory": {
+                            "type": "button",
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Backend",
+                                "emoji": true
+                            },
+                            "value": "Frontend",
+                            "url": "${NEXUS_REPO_BACKEND_URL}/com/yandex/practicum/devops/sausage-store/$VERSION/sausage-store-$VERSION.jar",
+                            "action_id": "button-action"
+                        }
+                    }
+                ]
+               }
+      EOF
+      )
+      curl -X POST -H "Content-type: application/json" --data "$DATA" ${NOTIFY_SLACK_URL}
 
 deploy:
   stage: deploy
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: on_success
   extends: .ssh-connection
+  environment:
+    name: staging-back
+    url: http://$DEV_HOST:$DEV_APP_PORT
   script:
     - scp ./backend/sausage-store-backend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-backend.service
     - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";setsid /bin/bash -s " < ./backend/deploy.sh
