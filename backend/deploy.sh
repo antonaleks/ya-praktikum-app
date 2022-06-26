@@ -9,7 +9,7 @@ curl -u ${NEXUS_REPO_USER}:$(echo $NEXUS_REPO_PASS | base64 -d) -o sausage-store
 sudo cp ./sausage-store.jar /home/jarservice/sausage-store.jar||true #"jar||true" говорит, если команда обвалится — продолжай
 echo "LOG_PATH=/opt/log/" > /etc/default/sausage-store-backend
 echo "REPORT_PATH=/var/www-data/htdocs/" >> /etc/default/sausage-store-backend
-echo "PSQL_ADMIN=$PSQL_ADMIN" >> /etc/default/sausage-store-backend
+echo "PSQL_USER=$PSQL_USER" >> /etc/default/sausage-store-backend
 echo "PSQL_PASSWORD=$PSQL_PASSWORD" >> /etc/default/sausage-store-backend
 echo "PSQL_HOST=$PSQL_HOST" >> /etc/default/sausage-store-backend
 echo "PSQL_PORT=$PSQL_PORT" >> /etc/default/sausage-store-backend
