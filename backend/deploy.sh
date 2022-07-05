@@ -14,6 +14,18 @@ echo "PSQL_PASSWORD=$PSQL_PASSWORD" >> /etc/default/sausage-store-backend
 echo "PSQL_HOST=$PSQL_HOST" >> /etc/default/sausage-store-backend
 echo "PSQL_PORT=$PSQL_PORT" >> /etc/default/sausage-store-backend
 echo "PSQL_DBNAME=$PSQL_DBNAME" >> /etc/default/sausage-store-backend
+echo "MONGO_USER=$MONGO_USER" >> /etc/default/sausage-store-backend
+echo "MONGO_PASSWORD=$MONGO_PASSWORD" >> /etc/default/sausage-store-backend
+echo "MONGO_HOST=$MONGO_HOST" >> /etc/default/sausage-store-backend
+echo "MONGO_DATABASE=$MONGO_DATABASE" >> /etc/default/sausage-store-backend
+#Устанавливаем сертификаты для подключения к БД
+#postgres
+mkdir -p ~/.postgresql && \
+wget "https://storage.yandexcloud.net/cloud-certs/CA.pem" -O ~/.postgresql/root.crt && \
+chmod 0600 ~/.postgresql/root.crt
+#mongo
+sudo mkdir -p /usr/local/share/ca-certificates/Yandex && \
+sudo wget "https://crls.yandex.net/allCAs.pem" -O /usr/local/share/ca-certificates/Yandex/YandexInternalRootCA.crt
 #Обновляем конфиг systemd с помощью рестарта
 sudo systemctl daemon-reload
 #Перезапускаем сервис сосисочной
