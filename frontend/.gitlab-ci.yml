@@ -141,13 +141,10 @@ deploy-docker:
   image: alpine:3.15.0
   # если хотим сделать деплой по кнопке
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
-    - if: '$CI_COMMIT_BRANCH == "master"'
-      when: manual
-    - if: '$CI_COMMIT_BRANCH != "master"'
-      when: always
-  extends: .ssh-connection
+    - when: on_success
+  extends: .ssh-connection-from-docker
   script:
     - ssh ${DEV_USER}@${DEV_HOST}
       "export "FRONT_PORT=${DEV_APP_PORT}";
