@@ -42,9 +42,9 @@ build-docker:
     - >
       docker build
       --build-arg VERSION=$VERSION
-      --tag $CI_REGISTRY_IMAGE/sausage-frontend:$CI_COMMIT_SHA
+      --tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
       .
-    - docker push $CI_REGISTRY_IMAGE/sausage-frontend:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
 
 .sonarqube-frontend-sast:
   stage: test
@@ -110,8 +110,8 @@ upload-docker-latest:
   script:
     - docker pull $CI_REGISTRY_IMAGE/sausage-frontend:$CI_COMMIT_SHA
     # если образ прошел проверки в CI (сканирование, тесты и т.д), то тегаем latest
-    - docker tag $CI_REGISTRY_IMAGE/sausage-frontend:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sausage-frontend:latest
-    - docker push $CI_REGISTRY_IMAGE/sausage-frontend:latest
+    - docker tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:latest
+    - docker push $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:latest
 
 
 deploy:
@@ -151,4 +151,7 @@ deploy-docker:
       export "BACKEND_URL=http://${DOCKER_BACKEND_NAME}:${BACKEND_PORT}";
       export "DOCKER_FRONTEND_NAME=${DOCKER_FRONTEND_NAME}";
       export "DOCKER_REGISTRY=${CI_REGISTRY}";
+      export "CI_REGISTRY_USER=${CI_REGISTRY_USER}";
+      export "CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}";
+      export "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}";
       /bin/bash -s " < ./frontend/frontend_docker_deploy.sh
