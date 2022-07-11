@@ -39,7 +39,7 @@ build-docker:
     - until docker info; do sleep 1; done
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - cd backend
+    - cd frontend
     - >
       docker build
       --build-arg VERSION=$VERSION
