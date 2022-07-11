@@ -1,10 +1,11 @@
 stages:
   - build
-  #  - test
+  - test
   - release
   - deploy
+
 include:
-  #  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
   - local: /template.gitlab-ci.yml
   - project: 'templates/ci'
     file: 'DockerInDockerTemplate.yml'
@@ -46,7 +47,7 @@ build-docker:
       .
     - docker push $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
 
-.sonarqube-frontend-sast:
+sonarqube-frontend-sast:
   stage: test
   image: sonarsource/sonar-scanner-cli:latest
   dependencies:
@@ -154,4 +155,5 @@ deploy-docker:
       export "CI_REGISTRY_USER=${CI_REGISTRY_USER}";
       export "CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}";
       export "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}";
+      export "DOCKER_FRONTEND_PORT=${DOCKER_FRONTEND_PORT}";
       /bin/bash -s " < ./frontend/frontend_docker_deploy.sh

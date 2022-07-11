@@ -1,10 +1,11 @@
 stages:
   - build
-  #- test
+  - test
   - release
   - deploy
+
 include:
-  #- template: Security/SAST.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
   - local: /template.gitlab-ci.yml
   - project: 'templates/ci'
     file: 'DockerInDockerTemplate.yml'
@@ -18,6 +19,7 @@ cache: &global_cache
   key: maven
   paths:
     - .m2/repository
+
 
 build-code-job: # задача с именем build-code-job
   stage: build   # этап build
@@ -46,7 +48,7 @@ build-docker:
       .
     - docker push $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
 
-.spotbugs-sast:
+spotbugs-sast:
   stage: test
   cache:
     <<: *global_cache
@@ -55,7 +57,7 @@ build-docker:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
 
-.sonarqube-backend-sast:
+sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
   script:
