@@ -140,6 +140,8 @@ deploy-docker:
       when: manual
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: manual
+    - if: '$CI_COMMIT_BRANCH != "master"'
+      when: always
   extends: .ssh-connection
   script:
     - ssh ${DEV_USER}@${DEV_HOST}
