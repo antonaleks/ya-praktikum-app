@@ -143,10 +143,10 @@ deploy-docker:
   script:
     - ssh ${DEV_USER}@${DEV_HOST}
       "export "VERSION=${VERSION}";
-      export "SPRING_DATASOURCE_URL==jdbc:postgresql://$PSQL_HOST:$PSQL_PORT/$PSQL_DBNAME";
+      export "SPRING_DATASOURCE_URL=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}";
       export "SPRING_DATASOURCE_USERNAME=${PSQL_USER}";
       export "SPRING_DATASOURCE_PASSWORD=${PSQL_PASSWORD}";
-      export "SPRING_DATA_MONGODB_URI=mongodb://$MONGO_USER:$MONGO_PASSWORD@$MONGO_HOST:27018/$MONGO_DATABASE?tls=true";
+      export "SPRING_DATA_MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true";
       export "DOCKER_REGISTRY=${CI_REGISTRY}";
       export "CI_REGISTRY_USER=${CI_REGISTRY_USER}";
       export "CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}";
