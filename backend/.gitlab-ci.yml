@@ -1,11 +1,13 @@
 stages:
   - build
-  - test
+  #- test
   - release
   - deploy
 include:
-  - template: Security/SAST.gitlab-ci.yml
+  #- template: Security/SAST.gitlab-ci.yml
   - local: /template.gitlab-ci.yml
+  - project: 'templates/ci'
+    file: 'DockerInDockerTemplate.yml'
 
 variables:
   VERSION: 1.0.${CI_PIPELINE_ID}
@@ -29,7 +31,22 @@ build-code-job: # задача с именем build-code-job
 #        - sausage-store-${VERSION}/sausage-store-${VERSION}.jar # сохранение собранного бэкенда как артефакт
 #        - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
 
-spotbugs-sast:
+build-docker:
+  stage: build
+  image: docker:20.10.12-dind-rootless
+  before_script:
+    - until docker info; do sleep 1; done
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - cd backend
+    - >
+      docker build
+      --build-arg VERSION=$VERSION
+      --tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
+      .
+    - docker push $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
+
+.spotbugs-sast:
   stage: test
   cache:
     <<: *global_cache
@@ -38,7 +55,7 @@ spotbugs-sast:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
 
-sonarqube-backend-sast:
+.sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
   script:
@@ -86,6 +103,20 @@ upload-release: # задача с именем upload-release
       )
       curl -X POST -H "Content-type: application/json" --data "$DATA" ${NOTIFY_SLACK_URL}
 
+upload-docker-latest:
+  variables:
+    GIT_STRATEGY: none
+  image: docker:20.10.12-dind-rootless
+  stage: release
+  before_script:
+    - until docker info; do sleep 1; done
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
+    # если образ прошел проверки в CI (сканирование, тесты и т.д), то тегаем latest
+    - docker tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:latest
+    - docker push $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:latest
+
 deploy:
   stage: deploy
   rules:
@@ -99,3 +130,25 @@ deploy:
   script:
     - scp ./backend/sausage-store-backend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-backend.service
     - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS"; export "PSQL_USER=$PSQL_USER"; export "PSQL_PASSWORD=$PSQL_PASSWORD"; export "PSQL_HOST=$PSQL_HOST"; export "PSQL_PORT=$PSQL_PORT"; export "PSQL_DBNAME=$PSQL_DBNAME"; export "MONGO_USER=$MONGO_USER"; export "MONGO_PASSWORD=$MONGO_PASSWORD"; export "MONGO_HOST=$MONGO_HOST"; export "MONGO_DATABASE=$MONGO_DATABASE"; setsid /bin/bash -s " < ./backend/deploy.sh
+
+deploy-docker:
+  stage: deploy
+  image: alpine:3.15.0
+  # если хотим сделать деплой по кнопке
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: manual
+  extends: .ssh-connection
+  script:
+    - ssh ${DEV_USER}@${DEV_HOST}
+      "export "VERSION=${VERSION}";
+      export "SPRING_DATASOURCE_URL==jdbc:postgresql://$PSQL_HOST:$PSQL_PORT/$PSQL_DBNAME";
+      export "SPRING_DATASOURCE_USERNAME=${PSQL_USER}";
+      export "SPRING_DATASOURCE_PASSWORD=${PSQL_PASSWORD}";
+      export "SPRING_DATA_MONGODB_URI=mongodb://$MONGO_USER:$MONGO_PASSWORD@$MONGO_HOST:27018/$MONGO_DATABASE?tls=true";
+      export "DOCKER_REGISTRY=${CI_REGISTRY}";
+      export "BACKEND_PORT=${BACKEND_PORT}";
+      export "DOCKER_BACKEND_NAME=${DOCKER_BACKEND_NAME}";
+      /bin/bash -s " < ./backend/backend_docker_deploy.sh

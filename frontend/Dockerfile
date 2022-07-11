@@ -1,9 +1,17 @@
-FROM node:14.17.3
+### STAGE 1: Biuld Environment ###
+FROM node:14.17.3 as builder
+ENV BACKEND_URL=http://localhost:8080
 # Create app directory
 WORKDIR /usr/src/app
-COPY . .
+COPY package*.json ./
 RUN npm install
-RUN npm install -g http-server
+COPY . .
 RUN npm run build
+
+### STAGE 2: Production Environment ###
+FROM node:alpine as app
 EXPOSE 80
-ENTRYPOINT ["http-server", "dist/frontend/", "-p", "80", "--proxy", "http://sausage-store:8080"]
+WORKDIR /app
+RUN npm install -g http-server
+COPY --from=builder /usr/src/app/dist .
+ENTRYPOINT http-server /app/frontend -p 80 --proxy ${BACKEND_URL}
