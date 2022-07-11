@@ -14,5 +14,5 @@ docker run -d --name ${DOCKER_FRONTEND_NAME} \
     --restart always \
     --pull always \
     --env-file .env \
-    --p ${DOCKER_FRONTEND_PORT}:80 \
+    -p ${DOCKER_FRONTEND_PORT}:80 \
     ${CI_REGISTRY_IMAGE}/${DOCKER_FRONTEND_NAME}:latest
