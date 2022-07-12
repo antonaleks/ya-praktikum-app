@@ -57,8 +57,8 @@ test-docker-image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
   services:
-    - name: $CI_REGISTRY_IMAGE/${DOCKER_BACKEND_NAME}:${VERSION}
-      alias: ${DOCKER_BACKEND_NAME}
+    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$VERSION
+      alias: $DOCKER_BACKEND_NAME
   cache: []
   stage: test
   variables:

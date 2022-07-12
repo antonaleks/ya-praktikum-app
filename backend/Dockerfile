@@ -5,9 +5,11 @@ ARG VERSION=${VERSION}
 WORKDIR /usr/src/app
 COPY *.xml ./
 RUN curl https://storage.yandexcloud.net/cloud-certs/CA.pem -o YandexInternalRootCA.crt \
-    && mvn dependency:sources -Dversion.application=${VERSION}
+    && mvn clean package -Dmaven.test.skip -Dmaven.main.skip -Dspring-boot.repackage.skip && rm -r target/
 COPY ./src ./src
-RUN mvn package -Dversion.application=${VERSION} -Dmaven.repo.local=.m2/repository
+RUN mvn package -Dversion.application=${VERSION} -Dmaven.repo.local=.m2/repository -Dmaven.test.skip
+RUN mkdir -p target/docker-packaging && cd target/docker-packaging && jar -xf ../my-app*.jar
+
 
 # release
 FROM openjdk:16-jdk-alpine
