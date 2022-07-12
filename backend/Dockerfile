@@ -5,7 +5,7 @@ ARG VERSION=${VERSION}
 WORKDIR /usr/src/app
 COPY *.xml ./
 RUN curl https://storage.yandexcloud.net/cloud-certs/CA.pem -o YandexInternalRootCA.crt \
-    && RUN mvn dependency:go-offline -Dmaven.test.skip
+    && mvn dependency:go-offline -Dmaven.test.skip
 COPY ./src ./src
 RUN mvn package -Dversion.application=${VERSION} -Dmaven.test.skip
 
