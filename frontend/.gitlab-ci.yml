@@ -3,9 +3,13 @@ stages:
   - test
   - release
   - deploy
+
 include:
   - template: Security/SAST.gitlab-ci.yml
   - local: /template.gitlab-ci.yml
+  - project: 'templates/ci'
+    file: 'DockerInDockerTemplate.yml'
+
 variables:
   VERSION: 1.0.${CI_PIPELINE_ID}
   SAST_EXCLUDED_ANALYZERS: "spotbugs"
@@ -27,6 +31,21 @@ build-code-job: # задача с именем build-code-job
   artifacts:
     paths:
       - sausage-store-${VERSION}/public_html  # сохранение собранного фронтэнда как артефакт
+
+build-docker:
+  stage: build
+  image: docker:20.10.12-dind-rootless
+  before_script:
+    - until docker info; do sleep 1; done
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - cd frontend
+    - >
+      docker build
+      --build-arg VERSION=$VERSION
+      --tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
+      .
+    - docker push $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
 
 sonarqube-frontend-sast:
   stage: test
@@ -81,6 +100,19 @@ upload-release: # задача с именем upload-release
       }
       curl -X POST -H "Content-type: application/json" --data  "$(generate_post_data)" ${NOTIFY_SLACK_URL}
 
+upload-docker-latest:
+  variables:
+    GIT_STRATEGY: none
+  image: docker:20.10.12-dind-rootless
+  stage: release
+  before_script:
+    - until docker info; do sleep 1; done
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
+    # если образ прошел проверки в CI (сканирование, тесты и т.д), то тегаем latest
+    - docker tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:latest
+    - docker push $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:latest
 
 
 deploy:
@@ -95,4 +127,33 @@ deploy:
     url: http://$DEV_HOST:$DEV_APP_PORT
   script:
     - scp ./frontend/sausage-store-frontend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-frontend.service
-    - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}"; export "FRONT_PORT=${DEV_APP_PORT}";export "NEXUS_REPO_FRONTEND_URL=${NEXUS_REPO_FRONTEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";setsid /bin/bash -s " < ./frontend/deploy.sh
+    - ssh ${DEV_USER}@${DEV_HOST}
+      "export "CURRENT_VERSION=${VERSION}";
+      export "VERSION=${VERSION}";
+      export "DEV_HOST=${DEV_HOST}";
+      export "FRONT_PORT=${DEV_APP_PORT}";
+      export "NEXUS_REPO_FRONTEND_URL=${NEXUS_REPO_FRONTEND_URL}";
+      export "NEXUS_REPO_USER=${NEXUS_REPO_USER}";
+      export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";
+      setsid /bin/bash -s " < ./frontend/deploy.sh
+
+deploy-docker:
+  stage: deploy
+  image: alpine:3.15.0
+  # если хотим сделать деплой по кнопке
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: on_success
+  extends: .ssh-connection-from-docker
+  script:
+    - ssh ${DEV_USER}@${DEV_HOST}
+      "export "FRONT_PORT=${DEV_APP_PORT}";
+      export "BACKEND_URL=http://${DOCKER_BACKEND_NAME}:${BACKEND_PORT}";
+      export "DOCKER_FRONTEND_NAME=${DOCKER_FRONTEND_NAME}";
+      export "DOCKER_REGISTRY=${CI_REGISTRY}";
+      export "CI_REGISTRY_USER=${CI_REGISTRY_USER}";
+      export "CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}";
+      export "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}";
+      export "DOCKER_FRONTEND_PORT=${DOCKER_FRONTEND_PORT}";
+      /bin/bash -s " < ./frontend/frontend_docker_deploy.sh
