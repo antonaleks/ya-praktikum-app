@@ -1,0 +1,43 @@
+{
+	"info": {
+		"_postman_id": "56e6a004-7316-41d2-9649-b418ae4a85dd",
+		"name": "sausage-store",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "9899359"
+	},
+	"item": [
+		{
+			"name": "sausage-store-products",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status test\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{backend_url}}:{{backend_port}}/api/products",
+					"protocol": "http",
+					"host": [
+						"{{backend_url}}"
+					],
+					"port": "{{backend_port}}",
+					"path": [
+						"api",
+						"products"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

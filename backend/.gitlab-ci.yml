@@ -1,6 +1,6 @@
 stages:
   - build
-#  - test
+  - test
   - release
   - deploy
 
@@ -33,38 +33,47 @@ cache: &global_cache
 #        - sausage-store-${VERSION}/sausage-store-${VERSION}.jar # сохранение собранного бэкенда как артефакт
 #        - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
 
-build-docker:
-  stage: build
-  image: docker:20.10.12-dind-rootless
-  before_script:
-    - until docker info; do sleep 1; done
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - cd backend
-    - >
-      docker build
-      --build-arg VERSION=$VERSION
-      --tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
-      .
-    - docker push $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
-
 build-docker-kaniko:
   stage: build
   cache: []
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [ "" ]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
   script:
-      - mkdir -p /kaniko/.docker
-      - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
       - >-
         /kaniko/executor
         --context "${CI_PROJECT_DIR}/backend"
         --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
+        --cache-copy-layers
         --destination "${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${CI_COMMIT_SHA}-kaniko"
         --cache=true
         --build-arg "VERSION=$VERSION"
 
+test-docker-image:
+  image:
+    name: postman/newman:alpine
+    entrypoint: [ "" ]
+  services:
+    - name $CI_REGISTRY_IMAGE/${DOCKER_BACKEND_NAME}:${VERSION}
+      alias ${DOCKER_BACKEND_NAME}
+  cache: []
+  stage: test
+  variables:
+    POSTMAN_COLLECTION: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_collection.json
+    POSTMAN_ENVIRONMENT: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_environment.json
+  script:
+    - newman --version
+    - npm install -g newman-reporter-html
+    - sed -i 's/BACKEND_URL/${DOCKER_BACKEND_NAME}/g' POSTMAN_ENVIRONMENT
+    - sed -i 's/BACKEND_PORT/${BACKEND_PORT}/g' POSTMAN_ENVIRONMENT
+    - newman run ${POSTMAN_COLLECTION1} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
+  artifacts:
+    when: always
+    paths:
+      - report.html
 
 .spotbugs-sast:
   stage: test
