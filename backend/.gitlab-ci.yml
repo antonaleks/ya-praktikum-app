@@ -1,11 +1,11 @@
 stages:
   - build
-  - test
+#  - test
   - release
   - deploy
 
 include:
-  - template: Security/SAST.gitlab-ci.yml
+#  - template: Security/SAST.gitlab-ci.yml
   - local: /template.gitlab-ci.yml
   - project: 'templates/ci'
     file: 'DockerInDockerTemplate.yml'
@@ -35,20 +35,22 @@ build-code-job: # задача с именем build-code-job
 
 build-docker:
   stage: build
-  image: docker:20.10.12-dind-rootless
-  before_script:
-    - until docker info; do sleep 1; done
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [ "" ]
   script:
-    - cd backend
-    - >
-      docker build
-      --build-arg VERSION=$VERSION
-      --tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
-      .
-    - docker push $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
+      - mkdir -p /kaniko/.docker
+      - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+      - >-
+        /kaniko/executor
+        --context "${CI_PROJECT_DIR}/backend"
+        --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
+        --destination "${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${CI_COMMIT_SHA}"
+        --cache=true
+        --build-arg "VERSION=$VERSION"
 
-spotbugs-sast:
+
+.spotbugs-sast:
   stage: test
   cache:
     <<: *global_cache
@@ -57,7 +59,7 @@ spotbugs-sast:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
 
-sonarqube-backend-sast:
+.sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
   script:
