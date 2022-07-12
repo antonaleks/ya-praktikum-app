@@ -57,7 +57,7 @@ test-docker-image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
   services:
-    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
+    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:${CI_COMMIT_SHA}-kaniko
       alias: backend
   cache: []
   stage: test
