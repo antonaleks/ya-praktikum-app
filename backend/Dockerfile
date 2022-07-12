@@ -7,7 +7,6 @@ COPY *.xml ./
 RUN curl https://storage.yandexcloud.net/cloud-certs/CA.pem -o YandexInternalRootCA.crt \
     && mvn dependency:resolve -Dversion.application=${VERSION}
 COPY ./src ./src
-
 RUN mvn package -Dversion.application=${VERSION} -Dmaven.repo.local=.m2/repository
 
 # release
