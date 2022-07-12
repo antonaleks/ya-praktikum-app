@@ -58,7 +58,7 @@ test-docker-image:
     entrypoint: [ "" ]
   services:
     - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
-      alias: $DOCKER_BACKEND_NAME
+      alias: backend
   cache: []
   stage: test
   variables:
@@ -67,7 +67,7 @@ test-docker-image:
   script:
     - newman --version
     - npm install -g newman-reporter-html
-    - sed -i 's/BACKEND_URL/${DOCKER_BACKEND_NAME}/g' POSTMAN_ENVIRONMENT
+    - sed -i 's/BACKEND_URL/backend/g' POSTMAN_ENVIRONMENT
     - sed -i 's/BACKEND_PORT/${BACKEND_PORT}/g' POSTMAN_ENVIRONMENT
     - newman run ${POSTMAN_COLLECTION1} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
   artifacts:
