@@ -5,9 +5,9 @@ ARG VERSION=${VERSION}
 WORKDIR /usr/src/app
 COPY *.xml ./
 RUN curl https://storage.yandexcloud.net/cloud-certs/CA.pem -o YandexInternalRootCA.crt \
-    && mvn clean package -Dmaven.test.skip -Dmaven.main.skip -Dspring-boot.repackage.skip && rm -r target/
+    && RUN mvn dependency:go-offline -Dmaven.test.skip
 COPY ./src ./src
-RUN mvn package -Dversion.application=${VERSION} -Dmaven.repo.local=.m2/repository -Dmaven.test.skip
+RUN mvn package -Dversion.application=${VERSION} -Dmaven.test.skip
 
 # release
 FROM openjdk:16-jdk-alpine
