@@ -8,8 +8,6 @@ RUN curl https://storage.yandexcloud.net/cloud-certs/CA.pem -o YandexInternalRoo
     && mvn clean package -Dmaven.test.skip -Dmaven.main.skip -Dspring-boot.repackage.skip && rm -r target/
 COPY ./src ./src
 RUN mvn package -Dversion.application=${VERSION} -Dmaven.repo.local=.m2/repository -Dmaven.test.skip
-RUN mkdir -p target/docker-packaging && cd target/docker-packaging && jar -xf ../*.jar
-
 
 # release
 FROM openjdk:16-jdk-alpine
