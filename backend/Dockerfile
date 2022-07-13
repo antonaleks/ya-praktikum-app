@@ -4,10 +4,10 @@ FROM maven:3.8.2-openjdk-16-slim as builder
 ARG VERSION=${VERSION}
 WORKDIR /usr/src/app
 COPY *.xml ./
-RUN curl https://storage.yandexcloud.net/cloud-certs/CA.pem -o YandexInternalRootCA.crt \
-    && mvn dependency:go-offline -Dmaven.test.skip -Dmaven.repo.local=.m2/repository
+RUN mvn dependency:go-offline -Dmaven.test.skip -Dmaven.repo.local=.m2/repository
 COPY ./src ./src
-RUN mvn package -Dversion.application=${VERSION} -Dmaven.test.skip -Dmaven.repo.local=.m2/repository
+RUN curl https://storage.yandexcloud.net/cloud-certs/CA.pem -o YandexInternalRootCA.crt \
+    && mvn package -Dversion.application=${VERSION} -Dmaven.test.skip -Dmaven.repo.local=.m2/repository
 
 # release
 FROM openjdk:16-jdk-alpine
