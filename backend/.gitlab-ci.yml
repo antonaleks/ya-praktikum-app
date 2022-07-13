@@ -46,22 +46,20 @@ build-docker-kaniko:
         --context "${CI_PROJECT_DIR}/backend"
         --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
         --cache-copy-layers
-        --destination "${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${CI_COMMIT_SHA}-kaniko"
+        --destination "${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${VERSION}"
         --cache=true
-        --build-arg "VERSION=$VERSION"
 
 docker-image-test:
   image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
   services:
-    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:${CI_COMMIT_SHA}-kaniko
+    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$VERSION
       alias: backend
   cache: []
   stage: test
   variables:
-    POSTMAN_COLLECTION: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_collection.json
-    POSTMAN_ENVIRONMENT: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_environment.json
+    POSTMAN_COLLECTION: https://www.getpostman.com/collections/aa59e8a4856ae6998ff5
     GIT_STRATEGY: clone
     SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
     SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
@@ -74,10 +72,8 @@ docker-image-test:
   script:
     - newman --version
     - npm install -g newman-reporter-html
-    - sed -i 's/BACKEND_URL/backend/g' ${POSTMAN_ENVIRONMENT}
-    - sed -i 's@BACKEND_PORT@'"$BACKEND_PORT"'@' ${POSTMAN_ENVIRONMENT}
     - sleep 20
-    - newman run ${POSTMAN_COLLECTION} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
+    - newman run ${POSTMAN_COLLECTION} --env-var "backend_port=$BACKEND_PORT" --env-var "backend_url=backend" --reporters cli,html --reporter-html-export report.html
   artifacts:
     when: always
     paths:
@@ -153,7 +149,7 @@ upload-docker-latest:
   before_script:
     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-     - crane tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA-kaniko latest
+     - crane tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$VERSION latest
 
 deploy:
   stage: deploy
