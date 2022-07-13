@@ -60,20 +60,19 @@ docker-image-test:
     - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:195a57b7206bf21d2ed96e6323efeb8cd7c4330c-kaniko
 #${CI_COMMIT_SHA}-kaniko
       alias: backend
-      variables:
-        SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}"
-        SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
-        SPRING_DATASOURCE_PASSWORD: ${PSQL_PASSWORD}
-        SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
-        LOG_PATH: /opt/log/
-        REPORT_PATH: /opt/log/
-        BACKEND_PORT: ${BACKEND_PORT}
   cache: []
   stage: test
   variables:
     POSTMAN_COLLECTION: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_collection.json
     POSTMAN_ENVIRONMENT: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_environment.json
     GIT_STRATEGY: clone
+    SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}"
+    SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
+    SPRING_DATASOURCE_PASSWORD: ${PSQL_PASSWORD}
+    SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
+    LOG_PATH: /opt/log/
+    REPORT_PATH: /opt/log/
+    BACKEND_PORT: ${BACKEND_PORT}
   script:
     - newman --version
     - npm install -g newman-reporter-html
