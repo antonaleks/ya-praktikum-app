@@ -79,7 +79,7 @@ docker-image-test:
 #    - sed -i 's@BACKEND_PORT@'"$BACKEND_PORT"'@' ${POSTMAN_ENVIRONMENT}
     - sleep 40
 #    - apt install curl -y
-    - curl http://backend:8080
+    - curl http://backend:8080/api/products
 #    - newman run ${POSTMAN_COLLECTION} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
   artifacts:
     when: always
