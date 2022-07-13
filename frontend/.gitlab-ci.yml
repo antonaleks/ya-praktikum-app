@@ -45,9 +45,8 @@ build-docker-kaniko:
         --context "${CI_PROJECT_DIR}/frontend"
         --dockerfile "${CI_PROJECT_DIR}/frontend/Dockerfile"
         --cache-copy-layers
-        --destination "${CI_REGISTRY_IMAGE}/${DOCKER_FRONTEND_NAME}:${CI_COMMIT_SHA}-kaniko"
+        --destination "${CI_REGISTRY_IMAGE}/${DOCKER_FRONTEND_NAME}:${VERSION}"
         --cache=true
-        --build-arg "VERSION=$VERSION"
 
 sonarqube-frontend-sast:
   stage: test
@@ -112,7 +111,7 @@ upload-docker-latest:
   before_script:
     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-     - crane tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA-kaniko latest
+     - crane tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:${VERSION} latest
 
 
 deploy:
