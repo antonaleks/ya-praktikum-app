@@ -52,7 +52,7 @@ cache: &global_cache
         --cache=true
         --build-arg "VERSION=$VERSION"
 
-test-docker-image:
+docker-image-test:
   image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
@@ -70,7 +70,7 @@ test-docker-image:
     - newman --version
     - npm install -g newman-reporter-html
     - sed -i 's/BACKEND_URL/backend/g' ${POSTMAN_ENVIRONMENT}
-    - sed -i 's/BACKEND_PORT/${BACKEND_PORT}/g' ${POSTMAN_ENVIRONMENT}
+    - sed -i 's/BACKEND_PORT/8080/g' ${POSTMAN_ENVIRONMENT}
     - newman run ${POSTMAN_COLLECTION} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
   artifacts:
     when: always
