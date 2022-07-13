@@ -72,6 +72,7 @@ docker-image-test:
     LOG_PATH: /opt/log/
     REPORT_PATH: /opt/log/
     BACKEND_PORT: ${BACKEND_PORT}
+    CI_DEBUG_SERVICES: trace
   script:
 #    - newman --version
 #    - npm install -g newman-reporter-html
