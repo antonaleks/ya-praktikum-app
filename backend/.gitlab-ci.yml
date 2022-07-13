@@ -33,20 +33,55 @@ build-code-job: # задача с именем build-code-job
 #        - sausage-store-${VERSION}/sausage-store-${VERSION}.jar # сохранение собранного бэкенда как артефакт
 #        - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
 
-build-docker:
+build-docker-kaniko:
   stage: build
-  image: docker:20.10.12-dind-rootless
-  before_script:
-    - until docker info; do sleep 1; done
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  cache: []
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [ "" ]
+  extends: .docker-registry-auth
   script:
-    - cd backend
-    - >
-      docker build
-      --build-arg VERSION=$VERSION
-      --tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
-      .
-    - docker push $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
+      - >-
+        /kaniko/executor
+        --context "${CI_PROJECT_DIR}/backend"
+        --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
+        --cache-copy-layers
+        --destination "${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${CI_COMMIT_SHA}-kaniko"
+        --cache=true
+        --build-arg "VERSION=$VERSION"
+
+docker-image-test:
+  image:
+    name: postman/newman:alpine
+    entrypoint: [ "" ]
+  services:
+    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:${CI_COMMIT_SHA}-kaniko
+      alias: backend
+  cache: []
+  stage: test
+  variables:
+    POSTMAN_COLLECTION: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_collection.json
+    POSTMAN_ENVIRONMENT: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_environment.json
+    GIT_STRATEGY: clone
+    SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
+    SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
+    SPRING_DATASOURCE_PASSWORD: ${PSQL_PASSWORD}
+    SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
+    LOG_PATH: /opt/log/
+    REPORT_PATH: /opt/log/
+    BACKEND_PORT: ${BACKEND_PORT}
+    CI_DEBUG_SERVICES: trace
+  script:
+    - newman --version
+    - npm install -g newman-reporter-html
+    - sed -i 's/BACKEND_URL/backend/g' ${POSTMAN_ENVIRONMENT}
+    - sed -i 's@BACKEND_PORT@'"$BACKEND_PORT"'@' ${POSTMAN_ENVIRONMENT}
+    - sleep 20
+    - newman run ${POSTMAN_COLLECTION} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
+  artifacts:
+    when: always
+    paths:
+      - report.html
 
 spotbugs-sast:
   stage: test
@@ -60,6 +95,7 @@ spotbugs-sast:
 sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
+  cache: []
   script:
     - cd backend
     - >
@@ -108,19 +144,20 @@ upload-release: # задача с именем upload-release
 upload-docker-latest:
   variables:
     GIT_STRATEGY: none
-  image: docker:20.10.12-dind-rootless
+  #image: docker:20.10.12-dind-rootless
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
+  cache: []
   stage: release
   before_script:
-    - until docker info; do sleep 1; done
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA
-    # если образ прошел проверки в CI (сканирование, тесты и т.д), то тегаем latest
-    - docker tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:latest
-    - docker push $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:latest
+     - crane tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$CI_COMMIT_SHA-kaniko latest
 
 deploy:
   stage: deploy
+  cache: []
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
@@ -135,8 +172,8 @@ deploy:
 
 deploy-docker:
   stage: deploy
+  cache: []
   image: alpine:3.15.0
-  # если хотим сделать деплой по кнопке
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
