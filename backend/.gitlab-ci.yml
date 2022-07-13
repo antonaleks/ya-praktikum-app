@@ -50,7 +50,7 @@ build-docker-kaniko:
         --cache=true
         --build-arg "VERSION=$VERSION"
 
-docker-image-test:
+.docker-image-test:
   image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
@@ -75,7 +75,7 @@ docker-image-test:
     - npm install -g newman-reporter-html
     - sed -i 's/BACKEND_URL/backend/g' ${POSTMAN_ENVIRONMENT}
     - sed -i 's@BACKEND_PORT@'"$BACKEND_PORT"'@' ${POSTMAN_ENVIRONMENT}
-    - sleep 10
+    - sleep 20
     - newman run ${POSTMAN_COLLECTION} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
   artifacts:
     when: always
