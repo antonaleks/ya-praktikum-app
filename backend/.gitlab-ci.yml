@@ -77,7 +77,7 @@ docker-image-test:
     - newman --version
     - npm install -g newman-reporter-html
     - sed -i 's/BACKEND_URL/backend/g' ${POSTMAN_ENVIRONMENT}
-    - sed -i 's@BACKEND_PORT@'"BACKEND_PORT"'@' ${POSTMAN_ENVIRONMENT}
+    - sed -i 's@BACKEND_PORT@'"$BACKEND_PORT"'@' ${POSTMAN_ENVIRONMENT}
     - newman run ${POSTMAN_COLLECTION} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
   artifacts:
     when: always
