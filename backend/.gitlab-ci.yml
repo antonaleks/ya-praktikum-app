@@ -33,7 +33,7 @@ cache: &global_cache
 #        - sausage-store-${VERSION}/sausage-store-${VERSION}.jar # сохранение собранного бэкенда как артефакт
 #        - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
 
-build-docker-kaniko:
+.build-docker-kaniko:
   stage: build
   cache: []
   image:
@@ -57,13 +57,15 @@ test-docker-image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
   services:
-    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:${CI_COMMIT_SHA}-kaniko
+    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:195a57b7206bf21d2ed96e6323efeb8cd7c4330c-kaniko
+#${CI_COMMIT_SHA}-kaniko
       alias: backend
   cache: []
   stage: test
   variables:
     POSTMAN_COLLECTION: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_collection.json
     POSTMAN_ENVIRONMENT: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_environment.json
+    GIT_STRATEGY: clone
   script:
     - newman --version
     - npm install -g newman-reporter-html

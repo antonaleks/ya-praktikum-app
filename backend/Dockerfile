@@ -7,7 +7,7 @@ COPY *.xml ./
 RUN curl https://storage.yandexcloud.net/cloud-certs/CA.pem -o YandexInternalRootCA.crt \
     && mvn dependency:go-offline -Dmaven.test.skip
 COPY ./src ./src
-RUN mvn package -Dversion.application=${VERSION} -Dmaven.test.skip
+RUN mvn package -Dversion.application=${VERSION} -Dmaven.test.skip -Dmaven.repo.local=.m2/repository
 
 # release
 FROM openjdk:16-jdk-alpine
