@@ -32,7 +32,7 @@ build-code-job: # задача с именем build-code-job
     paths:
       - sausage-store-${VERSION}/public_html  # сохранение собранного фронтэнда как артефакт
 
-build-docker:
+.build-docker:
   stage: build
   image: docker:20.10.12-dind-rootless
   before_script:
@@ -46,6 +46,23 @@ build-docker:
       --tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
       .
     - docker push $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
+
+build-docker-kaniko:
+  stage: build
+  cache: []
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [ "" ]
+  extends: .docker-registry-auth
+  script:
+      - >-
+        /kaniko/executor
+        --context "${CI_PROJECT_DIR}/frontend"
+        --dockerfile "${CI_PROJECT_DIR}/frontend/Dockerfile"
+        --cache-copy-layers
+        --destination "${CI_REGISTRY_IMAGE}/${DOCKER_FRONTEND_NAME}:${CI_COMMIT_SHA}-kaniko"
+        --cache=true
+        --build-arg "VERSION=$VERSION"
 
 sonarqube-frontend-sast:
   stage: test
@@ -103,16 +120,19 @@ upload-release: # задача с именем upload-release
 upload-docker-latest:
   variables:
     GIT_STRATEGY: none
-  image: docker:20.10.12-dind-rootless
+#  image: docker:20.10.12-dind-rootless
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [ "" ]
   stage: release
   before_script:
-    - until docker info; do sleep 1; done
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
-    # если образ прошел проверки в CI (сканирование, тесты и т.д), то тегаем latest
-    - docker tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:latest
-    - docker push $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:latest
+#    - docker pull $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA
+#    # если образ прошел проверки в CI (сканирование, тесты и т.д), то тегаем latest
+#    - docker tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:latest
+#    - docker push $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:latest
+     - crane tag $CI_REGISTRY_IMAGE/$DOCKER_FRONTEND_NAME:$CI_COMMIT_SHA-kaniko latest
 
 
 deploy:
