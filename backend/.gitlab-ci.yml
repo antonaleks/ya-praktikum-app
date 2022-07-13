@@ -52,8 +52,7 @@ cache: &global_cache
 
 docker-image-test:
   image:
-    name: curlimages/curl
-    #postman/newman:alpine
+    name: postman/newman:alpine
     entrypoint: [ "" ]
   services:
     - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:latest
@@ -74,14 +73,12 @@ docker-image-test:
     BACKEND_PORT: ${BACKEND_PORT}
     CI_DEBUG_SERVICES: trace
   script:
-#    - newman --version
-#    - npm install -g newman-reporter-html
-#    - sed -i 's/BACKEND_URL/backend/g' ${POSTMAN_ENVIRONMENT}
-#    - sed -i 's@BACKEND_PORT@'"$BACKEND_PORT"'@' ${POSTMAN_ENVIRONMENT}
-    - sleep 40
-#    - apt install curl -y
-    - curl http://backend:8080/api/products
-#    - newman run ${POSTMAN_COLLECTION} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
+    - newman --version
+    - npm install -g newman-reporter-html
+    - sed -i 's/BACKEND_URL/backend/g' ${POSTMAN_ENVIRONMENT}
+    - sed -i 's@BACKEND_PORT@'"$BACKEND_PORT"'@' ${POSTMAN_ENVIRONMENT}
+    - sleep 20
+    - newman run ${POSTMAN_COLLECTION} -e ${POSTMAN_ENVIRONMENT} --reporters cli,html --reporter-html-export report.html
   artifacts:
     when: always
     paths:
