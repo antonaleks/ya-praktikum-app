@@ -33,7 +33,7 @@ cache: &global_cache
 #        - sausage-store-${VERSION}/sausage-store-${VERSION}.jar # сохранение собранного бэкенда как артефакт
 #        - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
 
-build-docker-kaniko:
+.build-docker-kaniko:
   stage: build
   cache: []
   image:
@@ -50,12 +50,13 @@ build-docker-kaniko:
         --cache=true
         --build-arg "VERSION=$VERSION"
 
-.docker-image-test:
+docker-image-test:
   image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
   services:
-    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:${CI_COMMIT_SHA}-kaniko
+    - name: $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:latest
+      #${CI_COMMIT_SHA}-kaniko
       alias: backend
   cache: []
   stage: test
@@ -140,7 +141,7 @@ build-docker-kaniko:
       )
       curl -X POST -H "Content-type: application/json" --data "$DATA" ${NOTIFY_SLACK_URL}
 
-upload-docker-latest:
+.upload-docker-latest:
   variables:
     GIT_STRATEGY: none
   #image: docker:20.10.12-dind-rootless
