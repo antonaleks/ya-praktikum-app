@@ -33,7 +33,7 @@ cache: &global_cache
 #        - sausage-store-${VERSION}/sausage-store-${VERSION}.jar # сохранение собранного бэкенда как артефакт
 #        - ${CI_PROJECT_DIR}/.m2/ # сохранение зависимостей для SAST
 
-build-docker-kaniko:
+.build-docker-kaniko:
   stage: build
   cache: []
   image:
@@ -50,7 +50,7 @@ build-docker-kaniko:
         --cache=true
         --build-arg "VERSION=$VERSION"
 
-.docker-image-test:
+docker-image-test:
   image:
     name: curlimages/curl
     #postman/newman:alpine
@@ -65,7 +65,7 @@ build-docker-kaniko:
     POSTMAN_COLLECTION: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_collection.json
     POSTMAN_ENVIRONMENT: ${CI_PROJECT_DIR}/backend/src/test/postman/sausage-store.postman_environment.json
     GIT_STRATEGY: clone
-    SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}"
+    SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
     SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
     SPRING_DATASOURCE_PASSWORD: ${PSQL_PASSWORD}
     SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
@@ -145,7 +145,7 @@ build-docker-kaniko:
       )
       curl -X POST -H "Content-type: application/json" --data "$DATA" ${NOTIFY_SLACK_URL}
 
-upload-docker-latest:
+.upload-docker-latest:
   variables:
     GIT_STRATEGY: none
   #image: docker:20.10.12-dind-rootless
@@ -179,7 +179,7 @@ upload-docker-latest:
     - scp ./backend/sausage-store-backend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-backend.service
     - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS"; export "PSQL_USER=$PSQL_USER"; export "PSQL_PASSWORD=$PSQL_PASSWORD"; export "PSQL_HOST=$PSQL_HOST"; export "PSQL_PORT=$PSQL_PORT"; export "PSQL_DBNAME=$PSQL_DBNAME"; export "MONGO_USER=$MONGO_USER"; export "MONGO_PASSWORD=$MONGO_PASSWORD"; export "MONGO_HOST=$MONGO_HOST"; export "MONGO_DATABASE=$MONGO_DATABASE"; setsid /bin/bash -s " < ./backend/deploy.sh
 
-deploy-docker:
+.deploy-docker:
   stage: deploy
   cache: []
   image: alpine:3.15.0
