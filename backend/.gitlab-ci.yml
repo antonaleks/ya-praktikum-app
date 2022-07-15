@@ -184,4 +184,6 @@ deploy-docker:
       export "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}";
       export "BACKEND_PORT=${BACKEND_PORT}";
       export "DOCKER_BACKEND_NAME=${DOCKER_BACKEND_NAME}";
+      export "VAULT_HOST=${VAULT_HOST}";
+      export "VAULT_PORT=${VAULT_PORT}";
       /bin/bash -s " < ./backend/backend_docker_deploy.sh
