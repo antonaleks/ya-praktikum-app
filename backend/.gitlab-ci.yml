@@ -49,7 +49,7 @@ build-docker-kaniko:
         --destination "${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${VERSION}"
         --cache=true
 
-docker-image-test:
+.docker-image-test:
   image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
@@ -61,7 +61,7 @@ docker-image-test:
   variables:
     POSTMAN_COLLECTION: https://www.getpostman.com/collections/aa59e8a4856ae6998ff5
     GIT_STRATEGY: clone
-#    SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
+    SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
 #    SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
 #    SPRING_DATASOURCE_PASSWORD: ${PSQL_PASSWORD}
 #    SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
