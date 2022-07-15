@@ -21,7 +21,7 @@ cache: &global_cache
     - .m2/repository
 
 
-.build-code-job: # задача с именем build-code-job
+build-code-job: # задача с именем build-code-job
   stage: build   # этап build
   cache:
     <<: *global_cache
@@ -100,7 +100,7 @@ build-docker-kaniko:
       -Dsonar.login=${SONAR_LOGIN}
       -Dsonar.projectName=${SONAR_PROJECT_NAME_BACK}
 
-.upload-release: # задача с именем upload-release
+upload-release: # задача с именем upload-release
   stage: release # этап release
   cache:
     <<: *global_cache
@@ -150,7 +150,7 @@ upload-docker-latest:
   script:
      - crane tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$VERSION latest
 
-.deploy:
+deploy:
   stage: deploy
   cache: []
   rules:
