@@ -5,7 +5,7 @@ stages:
   - deploy
 
 include:
- # - template: Security/SAST.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
   - local: /template.gitlab-ci.yml
   - project: 'templates/ci'
     file: 'DockerInDockerTemplate.yml'
@@ -49,7 +49,7 @@ build-docker-kaniko:
         --destination "${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${VERSION}"
         --cache=true
 
-.docker-image-test:
+docker-image-test:
   image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
@@ -61,13 +61,12 @@ build-docker-kaniko:
   variables:
     GIT_STRATEGY: clone
     SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
-#    SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
-#    SPRING_DATASOURCE_PASSWORD: ${PSQL_PASSWORD}
-#    SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
     LOG_PATH: /opt/log/
     REPORT_PATH: /opt/log/
     BACKEND_PORT: ${BACKEND_PORT}
     CI_DEBUG_SERVICES: trace
+    VAULT_HOST: ${VAULT_HOST}
+    VAULT_TOKEN: ${VAULT_TOKEN}
   script:
     - newman --version
     - npm install -g newman-reporter-html
@@ -78,7 +77,7 @@ build-docker-kaniko:
     paths:
       - report.html
 
-.spotbugs-sast:
+spotbugs-sast:
   stage: test
   cache:
     <<: *global_cache
@@ -87,7 +86,7 @@ build-docker-kaniko:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
 
-.sonarqube-backend-sast:
+sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
   cache: []
