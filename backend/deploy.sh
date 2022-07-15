@@ -11,7 +11,7 @@ echo "LOG_PATH=/opt/log/" > /etc/default/sausage-store-backend
 echo "REPORT_PATH=/var/www-data/htdocs/" >> /etc/default/sausage-store-backend
 echo "SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL" >> /etc/default/sausage-store-backend
 echo "VAULT_HOST=$VAULT_HOST" >> /etc/default/sausage-store-backend
-echo "VAULT_PORT=$VAULT_PORT" >> /etc/default/sausage-store-backend
+echo "VAULT_TOKEN=$VAULT_TOKEN" >> /etc/default/sausage-store-backend
 echo "BACKEND_PORT=$BACKEND_PORT" >> /etc/default/sausage-store-backend
 
 #Устанавливаем сертификаты для подключения к БД

@@ -172,7 +172,7 @@ deploy:
       export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";
       export "SPRING_DATASOURCE_URL=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}";
       export "VAULT_HOST=${VAULT_HOST}";
-      export "VAULT_PORT=${VAULT_PORT}";
+      export "VAULT_TOKEN=${VAULT_TOKEN}";
       export "BACKEND_PORT=${BACKEND_PORT}";
       setsid /bin/bash -s " < ./backend/deploy.sh
 
@@ -196,5 +196,5 @@ deploy-docker:
       export "BACKEND_PORT=${BACKEND_PORT}";
       export "DOCKER_BACKEND_NAME=${DOCKER_BACKEND_NAME}";
       export "VAULT_HOST=${VAULT_HOST}";
-      export "VAULT_PORT=${VAULT_PORT}";
+      export "VAULT_TOKEN=${VAULT_TOKEN}";
       setsid /bin/bash -s " < ./backend/backend_docker_deploy.sh
