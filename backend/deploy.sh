@@ -9,15 +9,11 @@ curl -u ${NEXUS_REPO_USER}:$(echo $NEXUS_REPO_PASS | base64 -d) -o sausage-store
 sudo cp ./sausage-store.jar /home/jarservice/sausage-store.jar||true #"jar||true" говорит, если команда обвалится — продолжай
 echo "LOG_PATH=/opt/log/" > /etc/default/sausage-store-backend
 echo "REPORT_PATH=/var/www-data/htdocs/" >> /etc/default/sausage-store-backend
-echo "PSQL_USER=$PSQL_USER" >> /etc/default/sausage-store-backend
-echo "PSQL_PASSWORD=$PSQL_PASSWORD" >> /etc/default/sausage-store-backend
-echo "PSQL_HOST=$PSQL_HOST" >> /etc/default/sausage-store-backend
-echo "PSQL_PORT=$PSQL_PORT" >> /etc/default/sausage-store-backend
-echo "PSQL_DBNAME=$PSQL_DBNAME" >> /etc/default/sausage-store-backend
-echo "MONGO_USER=$MONGO_USER" >> /etc/default/sausage-store-backend
-echo "MONGO_PASSWORD=$MONGO_PASSWORD" >> /etc/default/sausage-store-backend
-echo "MONGO_HOST=$MONGO_HOST" >> /etc/default/sausage-store-backend
-echo "MONGO_DATABASE=$MONGO_DATABASE" >> /etc/default/sausage-store-backend
+echo "SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL" >> /etc/default/sausage-store-backend
+echo "VAULT_HOST=$VAULT_HOST" >> /etc/default/sausage-store-backend
+echo "VAULT_PORT=$VAULT_PORT" >> /etc/default/sausage-store-backend
+echo "BACKEND_PORT=$BACKEND_PORT" >> /etc/default/sausage-store-backend
+
 #Устанавливаем сертификаты для подключения к БД
 #postgres
 mkdir -p ~/.postgresql && \

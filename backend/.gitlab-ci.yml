@@ -163,7 +163,18 @@ upload-docker-latest:
     url: http://$DEV_HOST:$DEV_APP_PORT
   script:
     - scp ./backend/sausage-store-backend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-backend.service
-    - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS"; export "PSQL_USER=$PSQL_USER"; export "PSQL_PASSWORD=$PSQL_PASSWORD"; export "PSQL_HOST=$PSQL_HOST"; export "PSQL_PORT=$PSQL_PORT"; export "PSQL_DBNAME=$PSQL_DBNAME"; export "MONGO_USER=$MONGO_USER"; export "MONGO_PASSWORD=$MONGO_PASSWORD"; export "MONGO_HOST=$MONGO_HOST"; export "MONGO_DATABASE=$MONGO_DATABASE"; setsid /bin/bash -s " < ./backend/deploy.sh
+    - ssh ${DEV_USER}@${DEV_HOST}
+      "export "CURRENT_VERSION=${VERSION}";
+      export "VERSION=${VERSION}";
+      export "DEV_HOST=${DEV_HOST}";
+      export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}";
+      export "NEXUS_REPO_USER=${NEXUS_REPO_USER}";
+      export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";
+      export "SPRING_DATASOURCE_URL=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}";
+      export "VAULT_HOST=${VAULT_HOST}";
+      export "VAULT_PORT=${VAULT_PORT}";
+      export "BACKEND_PORT=${BACKEND_PORT}";
+      setsid /bin/bash -s " < ./backend/deploy.sh
 
 deploy-docker:
   stage: deploy
@@ -186,4 +197,4 @@ deploy-docker:
       export "DOCKER_BACKEND_NAME=${DOCKER_BACKEND_NAME}";
       export "VAULT_HOST=${VAULT_HOST}";
       export "VAULT_PORT=${VAULT_PORT}";
-      /bin/bash -s " < ./backend/backend_docker_deploy.sh
+      setsid /bin/bash -s " < ./backend/backend_docker_deploy.sh
