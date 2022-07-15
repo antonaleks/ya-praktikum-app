@@ -49,7 +49,7 @@ build-docker-kaniko:
         --destination "${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${VERSION}"
         --cache=true
 
-.docker-image-test:
+docker-image-test:
   image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
@@ -59,7 +59,6 @@ build-docker-kaniko:
   cache: []
   stage: test
   variables:
-    POSTMAN_COLLECTION: https://www.getpostman.com/collections/aa59e8a4856ae6998ff5
     GIT_STRATEGY: clone
     SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
 #    SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
@@ -73,7 +72,7 @@ build-docker-kaniko:
     - newman --version
     - npm install -g newman-reporter-html
     - sleep 20
-    - newman run ${POSTMAN_COLLECTION} --env-var "backend_port=$BACKEND_PORT" --env-var "backend_url=backend" --reporters cli,html --reporter-html-export report.html
+    - newman run ${POSTMAN_COLLECTION_TEST_DOCKER} --env-var "backend_port=$BACKEND_PORT" --env-var "backend_url=backend" --reporters cli,html --reporter-html-export report.html
   artifacts:
     when: always
     paths:
