@@ -5,7 +5,7 @@ stages:
   - deploy
 
 include:
-  - template: Security/SAST.gitlab-ci.yml
+ # - template: Security/SAST.gitlab-ci.yml
   - local: /template.gitlab-ci.yml
   - project: 'templates/ci'
     file: 'DockerInDockerTemplate.yml'
@@ -21,7 +21,7 @@ cache: &global_cache
     - .m2/repository
 
 
-build-code-job: # задача с именем build-code-job
+.build-code-job: # задача с именем build-code-job
   stage: build   # этап build
   cache:
     <<: *global_cache
@@ -61,10 +61,10 @@ docker-image-test:
   variables:
     POSTMAN_COLLECTION: https://www.getpostman.com/collections/aa59e8a4856ae6998ff5
     GIT_STRATEGY: clone
-    SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
-    SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
-    SPRING_DATASOURCE_PASSWORD: ${PSQL_PASSWORD}
-    SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
+#    SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
+#    SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
+#    SPRING_DATASOURCE_PASSWORD: ${PSQL_PASSWORD}
+#    SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
     LOG_PATH: /opt/log/
     REPORT_PATH: /opt/log/
     BACKEND_PORT: ${BACKEND_PORT}
@@ -79,7 +79,7 @@ docker-image-test:
     paths:
       - report.html
 
-spotbugs-sast:
+.spotbugs-sast:
   stage: test
   cache:
     <<: *global_cache
@@ -88,7 +88,7 @@ spotbugs-sast:
     COMPILE: "false"
     MAVEN_REPO_PATH: ${CI_PROJECT_DIR}/.m2/repository
 
-sonarqube-backend-sast:
+.sonarqube-backend-sast:
   stage: test
   image: maven:3.8-openjdk-16
   cache: []
@@ -101,7 +101,7 @@ sonarqube-backend-sast:
       -Dsonar.login=${SONAR_LOGIN}
       -Dsonar.projectName=${SONAR_PROJECT_NAME_BACK}
 
-upload-release: # задача с именем upload-release
+.upload-release: # задача с именем upload-release
   stage: release # этап release
   cache:
     <<: *global_cache
@@ -137,7 +137,7 @@ upload-release: # задача с именем upload-release
       )
       curl -X POST -H "Content-type: application/json" --data "$DATA" ${NOTIFY_SLACK_URL}
 
-upload-docker-latest:
+.upload-docker-latest:
   variables:
     GIT_STRATEGY: none
   #image: docker:20.10.12-dind-rootless
@@ -151,7 +151,7 @@ upload-docker-latest:
   script:
      - crane tag $CI_REGISTRY_IMAGE/$DOCKER_BACKEND_NAME:$VERSION latest
 
-deploy:
+.deploy:
   stage: deploy
   cache: []
   rules:
@@ -166,7 +166,7 @@ deploy:
     - scp ./backend/sausage-store-backend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-backend.service
     - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS"; export "PSQL_USER=$PSQL_USER"; export "PSQL_PASSWORD=$PSQL_PASSWORD"; export "PSQL_HOST=$PSQL_HOST"; export "PSQL_PORT=$PSQL_PORT"; export "PSQL_DBNAME=$PSQL_DBNAME"; export "MONGO_USER=$MONGO_USER"; export "MONGO_PASSWORD=$MONGO_PASSWORD"; export "MONGO_HOST=$MONGO_HOST"; export "MONGO_DATABASE=$MONGO_DATABASE"; setsid /bin/bash -s " < ./backend/deploy.sh
 
-deploy-docker:
+.deploy-docker:
   stage: deploy
   cache: []
   image: alpine:3.15.0

@@ -16,11 +16,7 @@ ExecStart=/usr/bin/java \
 -Dmyserver.bindPort='8080' \
 -Dmyserver.hostName='Sausage-store' \
 -jar '/home/jarservice/sausage-store.jar' \
---spring.datasource.url=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}  \
---spring.datasource.username=${PSQL_USER} \
---spring.datasource.password=${PSQL_PASSWORD} \
---spring.flyway.baselineOnMigrate=true \
---spring.data.mongodb.uri=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
+--spring.flyway.baselineOnMigrate=true
 SuccessExitStatus=143
 
 [Install]
