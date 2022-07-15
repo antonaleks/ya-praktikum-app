@@ -1,8 +1,9 @@
 #!/bin/bash
 set +e
 cat > .env <<EOF
-LOG_PATH=/opt/log/
-REPORT_PATH=/opt/log/
+SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+LOG_PATH=/app/log
+REPORT_PATH=/app/log
 BACKEND_PORT=${BACKEND_PORT}
 EOF
 docker network create -d bridge sausage_network || true
