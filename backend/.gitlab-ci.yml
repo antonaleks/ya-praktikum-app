@@ -59,21 +59,19 @@ docker-image-test:
   cache: []
   stage: test
   variables:
-    POSTMAN_COLLECTION: https://www.getpostman.com/collections/aa59e8a4856ae6998ff5
     GIT_STRATEGY: clone
     SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
-    SPRING_DATASOURCE_USERNAME: ${PSQL_USER}
-    SPRING_DATASOURCE_PASSWORD: ${PSQL_PASSWORD}
-    SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
     LOG_PATH: /opt/log/
     REPORT_PATH: /opt/log/
     BACKEND_PORT: ${BACKEND_PORT}
     CI_DEBUG_SERVICES: trace
+    VAULT_HOST: ${VAULT_HOST}
+    VAULT_TOKEN: ${VAULT_TOKEN}
   script:
     - newman --version
     - npm install -g newman-reporter-html
     - sleep 20
-    - newman run ${POSTMAN_COLLECTION} --env-var "backend_port=$BACKEND_PORT" --env-var "backend_url=backend" --reporters cli,html --reporter-html-export report.html
+    - newman run ${POSTMAN_COLLECTION_TEST_DOCKER} --env-var "backend_port=$BACKEND_PORT" --env-var "backend_url=backend" --reporters cli,html --reporter-html-export report.html
   artifacts:
     when: always
     paths:
@@ -164,7 +162,18 @@ deploy:
     url: http://$DEV_HOST:$DEV_APP_PORT
   script:
     - scp ./backend/sausage-store-backend.service ${DEV_USER}@${DEV_HOST}:/home/${DEV_USER}/sausage-store-backend.service
-    - ssh ${DEV_USER}@${DEV_HOST} "export "CURRENT_VERSION=${VERSION}"; export "VERSION=${VERSION}"; export "DEV_HOST=${DEV_HOST}";export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}"; export "NEXUS_REPO_USER=${NEXUS_REPO_USER}"; export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS"; export "PSQL_USER=$PSQL_USER"; export "PSQL_PASSWORD=$PSQL_PASSWORD"; export "PSQL_HOST=$PSQL_HOST"; export "PSQL_PORT=$PSQL_PORT"; export "PSQL_DBNAME=$PSQL_DBNAME"; export "MONGO_USER=$MONGO_USER"; export "MONGO_PASSWORD=$MONGO_PASSWORD"; export "MONGO_HOST=$MONGO_HOST"; export "MONGO_DATABASE=$MONGO_DATABASE"; setsid /bin/bash -s " < ./backend/deploy.sh
+    - ssh ${DEV_USER}@${DEV_HOST}
+      "export "CURRENT_VERSION=${VERSION}";
+      export "VERSION=${VERSION}";
+      export "DEV_HOST=${DEV_HOST}";
+      export "NEXUS_REPO_BACKEND_URL=${NEXUS_REPO_BACKEND_URL}";
+      export "NEXUS_REPO_USER=${NEXUS_REPO_USER}";
+      export "NEXUS_REPO_PASS=$NEXUS_REPO_PASS";
+      export "SPRING_DATASOURCE_URL=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}";
+      export "VAULT_HOST=${VAULT_HOST}";
+      export "VAULT_TOKEN=${VAULT_TOKEN}";
+      export "BACKEND_PORT=${BACKEND_PORT}";
+      setsid /bin/bash -s " < ./backend/deploy.sh
 
 deploy-docker:
   stage: deploy
@@ -179,13 +188,12 @@ deploy-docker:
     - ssh ${DEV_USER}@${DEV_HOST}
       "export "VERSION=${VERSION}";
       export "SPRING_DATASOURCE_URL=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}";
-      export "SPRING_DATASOURCE_USERNAME=${PSQL_USER}";
-      export "SPRING_DATASOURCE_PASSWORD=${PSQL_PASSWORD}";
-      export "SPRING_DATA_MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true";
       export "DOCKER_REGISTRY=${CI_REGISTRY}";
       export "CI_REGISTRY_USER=${CI_REGISTRY_USER}";
       export "CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}";
       export "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}";
       export "BACKEND_PORT=${BACKEND_PORT}";
       export "DOCKER_BACKEND_NAME=${DOCKER_BACKEND_NAME}";
-      /bin/bash -s " < ./backend/backend_docker_deploy.sh
+      export "VAULT_HOST=${VAULT_HOST}";
+      export "VAULT_TOKEN=${VAULT_TOKEN}";
+      setsid /bin/bash -s " < ./backend/backend_docker_deploy.sh
