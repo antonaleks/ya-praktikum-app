@@ -3,21 +3,23 @@ services:
 
   backend:
     image: ${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${BACKEND_VERSION}
-    container_name: ${DOCKER_BACKEND_NAME}-compose
     depends_on:
       - vault-setup
+    restart: on-failure
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
       SPRING_FLYWAY_BASELINE-ON-MIGRATE: "true"
       VAULT_TOKEN: ${VAULT_TOKEN}
       BACKEND_PORT: ${BACKEND_PORT}
       VAULT_HOST: ${VAULT_HOST}
+      VIRTUAL_HOST: backend.sausage-store-alekseev.ml
     networks:
       - sausage-store-compose
 
   backend-report:
     image: ${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_REPORT_NAME}:${BACKEND_REPORT_VERSION}
     container_name: ${DOCKER_BACKEND_REPORT_NAME}-compose
+    restart: on-failure
     depends_on:
       - vault-setup
     build:
@@ -29,16 +31,30 @@ services:
     networks:
       - sausage-store-compose
 
-  frontend:
+  nginx:
     image: ${CI_REGISTRY_IMAGE}/${DOCKER_FRONTEND_NAME}:${FRONTEND_VERSION}
-    container_name: ${DOCKER_FRONTEND_NAME}-compose
-    restart: always
-    depends_on:
-      - backend
+    container_name: ${DOCKER_FRONTEND_NAME}-nginx-compose
+    restart: on-failure
     ports:
       - "80:80"
     environment:
-      BACKEND_URL: ${BACKEND_URL}
+      BACKEND_URL: "http://localhost/api"
+    volumes:
+      - nginx-conf-compose:/etc/nginx/conf.d
+    networks:
+      - sausage-store-compose
+
+  dockergen:
+    image: nginxproxy/docker-gen
+    restart: on-failure
+    depends_on:
+      - nginx
+    command: -notify-sighup ${DOCKER_FRONTEND_NAME}-nginx-compose -watch /etc/docker-gen/templates/nginx.tmpl
+      /etc/nginx/conf.d/default.conf
+    volumes:
+      - nginx-conf-compose:/etc/nginx/conf.d
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./app/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
     networks:
       - sausage-store-compose
 
@@ -57,18 +73,21 @@ services:
   vault-setup:
     image: curlimages/curl
     container_name: vault-setup
-    restart: "no"
+    restart: "on-failure"
     depends_on:
       - vault
     environment:
       VAULT_TOKEN: ${VAULT_TOKEN}
     command:
       >
-        -H "X-Vault-Token: ${VAULT_TOKEN}"
-        -d '{"data":{"spring.datasource.password":"${PSQL_PASSWORD}","spring.datasource.username":"${PSQL_USER}","spring.data.mongodb.uri":"${SPRING_DATA_MONGODB_URL}"}}'
-        -X POST http://vault:8200/v1/secret/data/sausage-store
+      -H "X-Vault-Token: ${VAULT_TOKEN}"
+      -d '{"data":{"spring.datasource.password":"${PSQL_PASSWORD}","spring.datasource.username":"${PSQL_USER}","spring.data.mongodb.uri":"${SPRING_DATA_MONGODB_URL}"}}'
+      -X POST http://vault:8200/v1/secret/data/sausage-store
     networks:
-     - sausage-store-compose
+      - sausage-store-compose
 
 networks:
   sausage-store-compose:
+
+volumes:
+  nginx-conf-compose:
