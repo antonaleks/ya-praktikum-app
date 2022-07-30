@@ -24,3 +24,37 @@
     before_script:
         - mkdir -p /kaniko/.docker
         - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+
+.docker-compose-init: &docker-compose-init
+    before_script:
+        - apk add openssh-client bash
+        - eval $(ssh-agent -s)
+        - echo $SSH_PRIVATE_KEY | base64 -d | tr -d '\r' | ssh-add -
+        - mkdir -p ~/.ssh
+        - chmod 700 ~/.ssh
+        - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+        - chmod 644 ~/.ssh/known_hosts
+        - apk add --update docker-compose
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker context create sausage-store --docker host=ssh://${DEV_USER}@${DEV_HOST}
+        - docker context use sausage-store
+        - |
+          cat > .env <<EOF
+          SPRING_DATASOURCE_URL=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
+          LOG_PATH=/app/log
+          REPORT_PATH=/app/log
+          BACKEND_PORT=${BACKEND_PORT}
+          VAULT_HOST=${VAULT_HOST}
+          VAULT_TOKEN=${VAULT_TOKEN}
+          CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}
+          DOCKER_BACKEND_NAME=${DOCKER_BACKEND_NAME}
+          BACKEND_VERSION=latest
+          BACKEND_REPORT_VERSION=latest
+          FRONTEND_VERSION=latest
+          BACKEND_URL=http://backend:8080
+          SPRING_DATA_MONGODB_URL=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
+          PSQL_PASSWORD=${PSQL_PASSWORD}
+          PSQL_USER=${PSQL_USER}
+          EOF
+    after_script:
+        - rm .env

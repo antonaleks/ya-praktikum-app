@@ -23,7 +23,7 @@
                 <scope>import</scope>
             </dependency>
         </dependencies>
-    </dependencyManagement> 
+    </dependencyManagement>
     <properties>
         <java.version>16</java.version>
         <sonar.projectKey>test_manual</sonar.projectKey>

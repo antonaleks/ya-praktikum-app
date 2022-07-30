@@ -155,3 +155,16 @@ deploy-docker:
       export "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}";
       export "DOCKER_FRONTEND_PORT=${DOCKER_FRONTEND_PORT}";
       /bin/bash -s " < ./frontend/frontend_docker_deploy.sh
+
+deploy-docker-compose:
+  stage: deploy
+  cache: []
+  image: docker:20.10.12-dind
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: on_success
+  extends: .docker-compose-init
+  script:
+    - docker-compose --context sausage-store up -d frontend
+    - docker --context sausage-store ps
