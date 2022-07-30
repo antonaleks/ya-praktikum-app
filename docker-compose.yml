@@ -1,0 +1,74 @@
+version: "3.3"
+services:
+
+  backend:
+    image: ${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${BACKEND_VERSION}
+    container_name: ${DOCKER_BACKEND_NAME}-compose
+    depends_on:
+      - vault-setup
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
+      SPRING_FLYWAY_BASELINE-ON-MIGRATE: "true"
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      BACKEND_PORT: ${BACKEND_PORT}
+      VAULT_HOST: ${VAULT_HOST}
+    networks:
+      - sausage-store-compose
+
+  backend-report:
+    image: ${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_REPORT_NAME}:${BACKEND_REPORT_VERSION}
+    container_name: ${DOCKER_BACKEND_REPORT_NAME}-compose
+    depends_on:
+      - vault-setup
+    build:
+      context: backend-report
+      dockerfile: Dockerfile
+    environment:
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_HOST: ${VAULT_HOST}
+    networks:
+      - sausage-store-compose
+
+  frontend:
+    image: ${CI_REGISTRY_IMAGE}/${DOCKER_FRONTEND_NAME}:${FRONTEND_VERSION}
+    container_name: ${DOCKER_FRONTEND_NAME}-compose
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    environment:
+      BACKEND_URL: ${BACKEND_URL}
+    networks:
+      - sausage-store-compose
+
+  vault:
+    image: vault
+    container_name: vault-compose
+    ports:
+      - "8300:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_TOKEN}
+      VAULT_SERVER: "http://127.0.0.1:8200"
+      VAULT_ADDR: "http://127.0.0.1:8200"
+    networks:
+      - sausage-store-compose
+
+  vault-setup:
+    image: curlimages/curl
+    container_name: vault-setup
+    restart: "no"
+    depends_on:
+      - vault
+    environment:
+      VAULT_TOKEN: ${VAULT_TOKEN}
+    command:
+      >
+        -H "X-Vault-Token: ${VAULT_TOKEN}"
+        -d '{"data":{"spring.datasource.password":"${PSQL_PASSWORD}","spring.datasource.username":"${PSQL_USER}","spring.data.mongodb.uri":"${SPRING_DATA_MONGODB_URL}"}}'
+        -X POST http://vault:8200/v1/secret/data/sausage-store
+    networks:
+     - sausage-store-compose
+
+networks:
+  sausage-store-compose:
