@@ -203,5 +203,5 @@ deploy-docker-compose:
     - when: on_success
   extends: .docker-compose-init
   script:
-    - docker-compose --context sausage-store up -d --scale=${BACKEND_SCALE_COUNT} backend
+    - docker-compose --context sausage-store up -d --scale=${BACKEND_SCALE_COUNT} --force-recreate backend
     - docker --context sausage-store ps
