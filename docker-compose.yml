@@ -36,7 +36,7 @@ services:
     container_name: ${DOCKER_FRONTEND_NAME}-nginx-compose
     restart: on-failure
     ports:
-      - "80:80"
+      - "443:80"
     environment:
       BACKEND_URL: "http://localhost/api"
     volumes:
