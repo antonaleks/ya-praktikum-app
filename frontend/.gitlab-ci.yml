@@ -166,5 +166,5 @@ deploy-docker-compose:
     - when: on_success
   extends: .docker-compose-init
   script:
-    - docker-compose --context sausage-store up -d frontend
+    - docker-compose --context sausage-store up -d nginx dockergen
     - docker --context sausage-store ps
