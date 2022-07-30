@@ -45,7 +45,7 @@ build-docker-kaniko:
         --destination "${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${VERSION}"
         --cache=true
 
-docker-image-test:
+.docker-image-test:
   image:
     name: postman/newman:alpine
     entrypoint: [ "" ]
