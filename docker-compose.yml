@@ -51,7 +51,7 @@ services:
     volumes:
       - nginx-conf-compose:/etc/nginx/conf.d
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - /home/${DEV_USER}/sausage-store-frontend.service/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
+      - /home/${DEV_USER}/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
     networks:
       - sausage-store-compose
 
