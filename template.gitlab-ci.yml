@@ -38,13 +38,14 @@
         - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
         - docker context create sausage-store --docker host=ssh://${DEV_USER}@${DEV_HOST}
         - docker context use sausage-store
+        - export DOCKER_HOST=ssh://${DEV_USER}@${DEV_HOST}
         - |
           cat > .env <<EOF
           SPRING_DATASOURCE_URL=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
           LOG_PATH=/app/log
           REPORT_PATH=/app/log
           BACKEND_PORT=${BACKEND_PORT}
-          VAULT_HOST=${VAULT_HOST}
+          VAULT_HOST=vault
           VAULT_TOKEN=${VAULT_TOKEN}
           CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}
           DOCKER_BACKEND_NAME=${DOCKER_BACKEND_NAME}
