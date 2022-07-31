@@ -39,6 +39,8 @@
         - docker context create sausage-store --docker host=ssh://${DEV_USER}@${DEV_HOST}
         - docker context use sausage-store
         - export DOCKER_HOST=ssh://${DEV_USER}@${DEV_HOST}
+        - ls -al
+        - ls -al app
         - |
           cat > .env <<EOF
           SPRING_DATASOURCE_URL=jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
