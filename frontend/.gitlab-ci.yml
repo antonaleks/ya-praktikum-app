@@ -166,7 +166,7 @@ deploy-docker-compose:
     - when: on_success
   extends: .docker-compose-init
   script:
-    - scp ./app/nginx.tmpl ${DEV_USER}@${DEV_HOST}:/home/front-user/nginx-template/nginx.tmpl
+    - scp ${CI_PROJECT_DIR}/app/nginx.tmpl ${DEV_USER}@${DEV_HOST}:/home/front-user/nginx-template/
     - docker-compose --context sausage-store pull nginx dockergen
     - docker-compose --context sausage-store up -d --force-recreate nginx dockergen
     - docker --context sausage-store ps
