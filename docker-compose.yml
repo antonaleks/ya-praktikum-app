@@ -1,10 +1,8 @@
-version: "3.3"
+version: "3.4"
 services:
 
-  backend:
+  blue:
     image: ${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${BACKEND_VERSION}
-    depends_on:
-      - vault-setup
     restart: on-failure
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
@@ -13,6 +11,31 @@ services:
       BACKEND_PORT: ${BACKEND_PORT}
       VAULT_HOST: ${VAULT_HOST}
       VIRTUAL_HOST: backend.sausage-store-alekseev.ml
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:${BACKEND_PORT}/actuator/health
+      interval: 5s
+      timeout: 5s
+      retries: 6
+      start_period: 25s
+    networks:
+      - sausage-store-compose
+
+  green:
+    image: ${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_NAME}:${BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${PSQL_HOST}:${PSQL_PORT}/${PSQL_DBNAME}
+      SPRING_FLYWAY_BASELINE-ON-MIGRATE: "true"
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      BACKEND_PORT: ${BACKEND_PORT}
+      VAULT_HOST: ${VAULT_HOST}
+      VIRTUAL_HOST: backend.sausage-store-alekseev.ml
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:${BACKEND_PORT}/actuator/health
+      interval: 5s
+      timeout: 5s
+      retries: 6
+      start_period: 25s
     networks:
       - sausage-store-compose
 
@@ -20,8 +43,6 @@ services:
     image: ${CI_REGISTRY_IMAGE}/${DOCKER_BACKEND_REPORT_NAME}:${BACKEND_REPORT_VERSION}
     container_name: ${DOCKER_BACKEND_REPORT_NAME}-compose
     restart: on-failure
-    depends_on:
-      - vault-setup
     environment:
       VAULT_TOKEN: ${VAULT_TOKEN}
       VAULT_HOST: ${VAULT_HOST}
