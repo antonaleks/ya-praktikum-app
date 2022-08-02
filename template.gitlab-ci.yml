@@ -44,7 +44,7 @@
           LOG_PATH=/app/log
           REPORT_PATH=/app/log
           BACKEND_PORT=${BACKEND_PORT}
-          VAULT_HOST=${VAULT_HOST}
+          VAULT_HOST=vault
           VAULT_TOKEN=${VAULT_TOKEN}
           CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}
           DOCKER_BACKEND_NAME=${DOCKER_BACKEND_NAME}
@@ -55,6 +55,7 @@
           SPRING_DATA_MONGODB_URL=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:27018/${MONGO_DATABASE}?tls=true
           PSQL_PASSWORD=${PSQL_PASSWORD}
           PSQL_USER=${PSQL_USER}
+          DEV_USER=${DEV_USER}
           EOF
     after_script:
         - rm .env
