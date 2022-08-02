@@ -9,9 +9,7 @@ COPY . .
 RUN npm run build
 
 ### STAGE 2: Production Environment ###
-FROM node:alpine as app
+FROM nginx:stable-alpine
 EXPOSE 80
-WORKDIR /app
-RUN npm install -g http-server
-COPY --from=builder /usr/src/app/dist .
-ENTRYPOINT http-server /app/frontend -p 80 --proxy ${BACKEND_URL}
+COPY --from=builder /usr/src/app/dist/frontend /usr/share/nginx/html
+CMD ["nginx", "-g", "daemon off;"]

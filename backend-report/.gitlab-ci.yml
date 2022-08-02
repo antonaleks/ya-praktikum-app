@@ -91,5 +91,6 @@ deploy-docker-compose:
     - when: on_success
   extends: .docker-compose-init
   script:
-    - docker-compose --context sausage-store up -d backend-report
+    - docker-compose --context sausage-store pull backend-report
+    - docker-compose --context sausage-store up -d --force-recreate backend-report
     - docker --context sausage-store ps
