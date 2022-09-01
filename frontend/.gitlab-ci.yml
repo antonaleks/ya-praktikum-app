@@ -172,4 +172,4 @@ deploy-argocd:
     - when: on_success
   script:
     - argocd --grpc-web --auth-token $ARGO_TOKEN --server $ARGO_SERVER app set $ARGO_APP -p frontend.image.tag=$VERSION
-    - argocd --grpc-web --auth-token $ARGO_TOKEN --server $ARGO_SERVER app sync $ARGO_APP
+#    - argocd --grpc-web --auth-token $ARGO_TOKEN --server $ARGO_SERVER app sync $ARGO_APP
