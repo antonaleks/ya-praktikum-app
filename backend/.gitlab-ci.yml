@@ -147,10 +147,7 @@ upload-docker-latest:
 deploy:
   stage: deploy
   cache: []
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-    - when: on_success
+  when: manual
   extends: .ssh-connection
   environment:
     name: staging-back
@@ -174,10 +171,7 @@ deploy-docker:
   stage: deploy
   cache: []
   image: alpine:3.15.0
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-    - when: on_success
+  when: manual
   extends: .ssh-connection-from-docker
   script:
     - ssh ${DEV_USER}@${DEV_HOST}
@@ -197,11 +191,20 @@ deploy-docker-compose:
   stage: deploy
   cache: []
   image: docker:20.10.12-dind
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-    - when: on_success
+  when: manual
   extends: .docker-compose-init
   script:
     - bash backend/deploy_blue_green.sh
     - docker --context sausage-store ps
+
+deploy-argocd:
+  stage: deploy
+  cache: []
+  image: argoproj/argocd:v2.3.3
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: on_success
+  script:
+    argocd --grpc-web --auth-token $ARGO_TOKEN --server $ARGO_SERVER app set $ARGO_APP -p backend.image.tag=$VERSION
+    argocd --grpc-web --auth-token $ARGO_TOKEN --server $ARGO_SERVER app sync $ARGO_APP
