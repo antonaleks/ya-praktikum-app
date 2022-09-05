@@ -85,12 +85,21 @@ deploy-docker-compose:
   stage: deploy
   cache: [ ]
   image: docker:20.10.12-dind
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-    - when: on_success
+  when: manual
   extends: .docker-compose-init
   script:
     - docker-compose --context sausage-store pull backend-report
     - docker-compose --context sausage-store up -d --force-recreate backend-report
     - docker --context sausage-store ps
+
+deploy-argocd:
+  stage: deploy
+  cache: []
+  image: argoproj/argocd:v2.3.3
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: on_success
+  script:
+    - argocd --grpc-web --auth-token $ARGO_TOKEN --server $ARGO_SERVER app set $ARGO_APP -p backend-report.image.tag=$VERSION
+#    - argocd --grpc-web --auth-token $ARGO_TOKEN --server $ARGO_SERVER app sync $ARGO_APP
